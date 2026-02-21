@@ -133,9 +133,107 @@ body {
     background: #9a3a3a;
 }
 
-#buySelectedBtn {
+/* Top-right controls container */
+#topRightControls {
+    position: fixed;
+    top: 17px;
+    right: 12px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+/* User display at top */
+#userDisplay {
+    font-weight: 700;
+    font-size: 20px;
+    text-align: right;
+}
+
+/* Auth buttons row */
+#authButtons {
+    display: flex;
+    gap: 6px;
+    flex-direction: row;
+}
+
+/* shared button style for top-right controls */
+
+.top-btn,
+#solvePuzzleMainBtn { /* not in use*/
     background: #2a4a6a;
     border: 2px solid #4a7a9a;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.top-btn:hover,
+#solvePuzzleMainBtn:hover { /* not in use*/
+    background: #3a5a8a;
+}
+
+/* Login button - green */
+#loginBtn {
+    background: #2a5a2a;
+    border-color: #4a8a4a;
+}
+#loginBtn:hover {
+    background: #3a6a3a;
+}
+
+/* Logout button - red */
+#logoutBtn {
+    background: #8a2a2a;
+    border-color: #aa4a4a;
+}
+#logoutBtn:hover {
+    background: #9a3a3a;
+}
+
+/* Leaderboard (top-left, outside canvas) */
+#leaderboard {
+    position: fixed;
+    top: 17px;
+    left: 12px;
+    z-index: 1000;
+    background: rgba(20,20,20,0.95);
+    border: 2px solid #333;
+    padding: 8px 10px;
+    border-radius: 8px;
+    width: 280px;
+    color: #fff;
+    font-size: 14px;
+}
+
+#leaderboard h3 {
+    margin: 0 0 6px 0;
+    font-size: 13px;
+    text-align: left;
+}
+
+#leaderboardList { display: flex; flex-direction: column; gap: 6px; }
+.leader-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.03);
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+.leader-item .name { color: #ffd966; font-weight: 700; }
+.leader-item .waves { color: #9ad3ff; font-weight: 700; }
+
+#buySelectedBtn {
+    background: #6a662a;
+    border: 2px solid #9a954a;
     color: #fff;
     padding: 10px 20px;
     border-radius: 5px;
@@ -146,7 +244,7 @@ body {
 }
 
 #buySelectedBtn:hover {
-    background: #3a5a8a;
+    background: #8a7d3a;
 }
 
 .health-bar {
