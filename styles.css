@@ -19,11 +19,13 @@ body {
 #gameContainer {
     position: relative;
     border: 2px solid #333;
+    border-radius: 10px;
 }
 
 #gameCanvas {
     background: #0a0a0a;
     display: block;
+    border-radius: 10px;
 }
 
 #hud {
@@ -40,11 +42,8 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(20, 20, 20, 0.6);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid #444;
     padding: 20px;
     border-radius: 10px;
     z-index: 20;
@@ -73,8 +72,8 @@ body {
 }
 
 .upgrade-btn:hover {
-    background: #444;
-    border-color: #777;
+    background: #3a6a3a;
+    border-color: #3a6a3a;
 }
 
 .upgrade-btn:disabled {
@@ -89,6 +88,19 @@ body {
     border-color: #4a7a4a;
 }
 
+.upgrade-btn.selected {
+    background: linear-gradient(180deg, #445f45, #2f6a2f);
+    border-color: #4a7a4a;
+    box-shadow: 0 0 8px rgba(255,215,0,0.12) inset;
+}
+
+.shop-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
+
 #nextWaveBtn {
     background: #2a5a2a;
     border: 2px solid #4a8a4a;
@@ -96,13 +108,45 @@ body {
     padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
-    margin-top: 15px;
     font-family: inherit;
     font-size: 14px;
+    flex: 1;
 }
 
 #nextWaveBtn:hover {
     background: #3a6a3a;
+}
+
+#solvePuzzleBtn {
+    background: #8a2a2a;
+    border: 2px solid #aa4a4a;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    flex: 1;
+}
+
+#solvePuzzleBtn:hover {
+    background: #9a3a3a;
+}
+
+#buySelectedBtn {
+    background: #2a4a6a;
+    border: 2px solid #4a7a9a;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    flex: 1;
+}
+
+#buySelectedBtn:hover {
+    background: #3a5a8a;
 }
 
 .health-bar {
@@ -138,113 +182,72 @@ body {
     transition: width 0.1s;
 }
 
-/* Add these styles at the end of the file */
-
-.puzzle-overlay {
+/* Puzzle modal styles */
+.modal {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 30;
+    background: rgba(0,0,0,0.6);
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 50;
 }
-
-.puzzle-container {
-    background: #222;
-    border: 2px solid #4a8a4a;
-    border-radius: 10px;
+.modal-content {
+    background: #151515;
+    border: 2px solid #333;
     padding: 20px;
-    max-width: 500px;
-    width: 90%;
-}
-
-.puzzle-container h2 {
+    border-radius: 8px;
+    width: 420px;
     text-align: center;
-    margin-bottom: 20px;
-    color: #4a8a4a;
+    position: relative;
 }
-
-.puzzle-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-}
-
-#puzzleImage {
-    max-width: 300px;
+.modal-content img {
+    max-width: 100%;
     border: 2px solid #444;
-    border-radius: 5px;
-    background: #333;
+    border-radius: 6px;
+    margin-bottom: 12px;
 }
-
-.puzzle-input-group {
+.modal-inputs {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-    max-width: 200px;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 8px;
 }
-
-.puzzle-input-group label {
-    text-align: center;
-    font-size: 14px;
-}
-
-#puzzleAnswer {
-    padding: 8px;
-    background: #333;
-    border: 2px solid #555;
+.modal-inputs input {
+    font-size: 18px;
     color: #fff;
-    font-family: inherit;
-    font-size: 16px;
-    text-align: center;
-    border-radius: 3px;
+    width: 140px;
+    background-color: #151515;
+    border: 2px solid #444;
+    border-radius: 6px;
 }
 
-#puzzleAnswer:focus {
-    outline: none;
-    border-color: #4a8a4a;
-}
-
-#submitPuzzleBtn, #closePuzzleBtn {
-    padding: 8px 16px;
+#submitBtnModal {
     background: #2a5a2a;
     border: 2px solid #4a8a4a;
     color: #fff;
-    font-family: inherit;
+    padding: 10px 20px;
+    border-radius: 5px;
     cursor: pointer;
-    border-radius: 3px;
-    font-weight: bold;
+    font-family: inherit;
+    font-size: 14px;
 }
 
-#submitPuzzleBtn:hover, #closePuzzleBtn:hover {
+#submitBtnModal:hover {
     background: #3a6a3a;
 }
 
-#closePuzzleBtn {
-    background: #5a2a2a;
-    border-color: #8a4a4a;
+.modal-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
 }
-
-#closePuzzleBtn:hover {
-    background: #6a3a3a;
-}
-
-#puzzleMessage {
-    min-height: 30px;
-    text-align: center;
-    font-weight: bold;
-}
-
-.puzzle-message-success {
-    color: #4a8a4a;
-}
-
-.puzzle-message-error {
-    color: #ff4444;
-}
+.modal-result { margin-top: 12px; font-size: 15px; }
