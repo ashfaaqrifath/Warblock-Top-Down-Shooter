@@ -4,24 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warblock - Top Down Shooter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="shortcut icon" href="mylogo3.png">
 </head>
 <body>
+    <div id="leaderboard">
+        <h3>Leaderboard</h3>
+        <div id="leaderboardList">
+            <!-- Placeholder entries will be injected here -->
+        </div>
+    </div>
+
+    <div id="topRightControls">
+        <div id="userDisplay">
+            <i class="fas fa-user-circle"></i>&nbsp Rachinter
+        </div>
+        <br>
+        <div id="authButtons">
+            <button id="loginBtn" class="top-btn">Login</button>
+            <button id="logoutBtn" class="top-btn">Logout</button>
+        </div>
+        <br>
+        
+    </div>
     <div id="gameContainer">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         
         <div id="hud">
             <div style="color: #fff;">Wave: <span id="waveDisplay">1</span></div>
-            <div style="color: #ffc800;">Credits: <span id="creditsDisplay">0</span></div>
-            <div style="color: #0099ff;">Ammo: <span id="ammoDisplay">12/30</span></div>
+            <div style="color: #ffd966;">Credits: <span id="creditsDisplay">0</span></div>
+            <div style="color: #0099ff;">Ammo: <span id="ammoDisplay">30/30</span></div>
             <div style="color: #00ff84d8;">Health: <span id="healthDisplay">100</span></div>
             <div id="upgradeIcons"></div>
         </div>
 
         <div id="shop">
             <h2>Inventory</h2>
-            <p style="color: #ffc800;">Credits: <span id="shopCredits">0</span></p>
+            <p style="color: #ffd966;">Credits: <span id="shopCredits">0</span></p>
             <div class="shop-grid">
                 <button class="upgrade-btn" data-upgrade="extendedMag">
                     <strong>Extended Mag</strong><br>
@@ -33,15 +53,10 @@
                     +25% Damage<br>
                     Credits: <span class="cost">75</span>
                 </button>
-                <button class="upgrade-btn" data-upgrade="temporalRounds">
-                    <strong>Temporal Rounds</strong><br>
-                    Slow enemies on hit<br>
+                <button class="upgrade-btn" data-upgrade="temporalField">
+                    <strong>Temporal Field</strong><br>
+                    Slows enemy on entry<br>
                     Credits: <span class="cost">100</span>
-                </button>
-                <button class="upgrade-btn" data-upgrade="quantumDisplacer">
-                    <strong>Quantum Displacer</strong><br>
-                    20% chance to teleport enemies<br>
-                    Credits: <span class="cost">150</span>
                 </button>
                 <button class="upgrade-btn" data-upgrade="vampiricStrike">
                     <strong>Vampiric Strike</strong><br>
@@ -72,6 +87,20 @@
                         <button id="submitBtnModal">Submit</button>
                     </div>
                     <div id="puzzleResult" class="modal-result"></div>
+                </div>
+            </div>
+
+            <!-- Login modal overlay -->
+            <div id="loginModal" class="modal" style="display:none;">
+                <div class="modal-content">
+                    <button id="closeLoginBtn" class="modal-close">✕</button>
+                    <h3>Login</h3>
+                    <div class="modal-inputs">
+                        <input type="text" id="loginUsername" placeholder="Username">
+                        <input type="password" id="loginPassword" placeholder="Password">
+                        <button id="loginSubmitBtn">Submit</button>
+                    </div>
+                    <div id="loginResult" class="modal-result"></div>
                 </div>
             </div>
 
