@@ -54,20 +54,20 @@ const GameConfig = {
     UPGRADES: {
         extendedMag: { cost: 50, maxPurchases: 10, costGrowth: 1.5 },
         highCaliber: { cost: 75, maxPurchases: 5, costGrowth: 1.5 },
-        cryoRounds: { cost: 100, maxPurchases: 1, costGrowth: 1.5 },
+        temporalRounds: { cost: 100, maxPurchases: 1, costGrowth: 1.5 },
         quantumDisplacer: { cost: 150, maxPurchases: 1, costGrowth: 1.5 },
         vampiricStrike: { cost: 125, maxPurchases: 1, costGrowth: 1.5 },
         rapidFire: { cost: 80, maxPurchases: 3, costGrowth: 1.5 }
     },
     COLORS: {
-        PLAYER: '#4a8a4a',
+        PLAYER: '#0099ff',
         ENEMY: '#ff0000',
         HEALTH_BAR_BG: '#333',
         HEALTH_BAR_FILL: '#4a8a4a',
         BULLET: '#ffff88',
         PARTICLE_HIT: '#ff8888',
         PARTICLE_DEATH: '#ff4444',
-        CRYO_EFFECT: '#88ccff',
+        TEMPORAL_EFFECT: '#88ccff',
         BACKGROUND: '#0a0a0a',
         GRID: '#1a1a1a'
     }
@@ -142,22 +142,49 @@ class UIManager {
         this.currentPlayer = null;
         this.currentWaveManager = null;
         this.currentShop = null;
-        this.currentCurrency = 0;
+        this.currentCredits = 0;
         this.setupShopListeners();
         this.setupEventListeners();
     }
 
     setupShopListeners() {
+        // Toggle selection on click. Selection is visual; purchases occur when player confirms via upgrade.
         document.querySelectorAll('.upgrade-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                // ignore clicks on disabled buttons
+                if (btn.disabled) return;
                 const upgradeType = btn.dataset.upgrade;
-                this.eventEmitter.emit('upgrade-purchased', { upgradeType });
+                if (btn.classList.contains('selected')) {
+                    btn.classList.remove('selected');
+                    this.eventEmitter.emit('upgrade-deselected', { upgradeType });
+                } else {
+                    btn.classList.add('selected');
+                    this.eventEmitter.emit('upgrade-selected', { upgradeType });
+                }
             });
         });
+
+        // Buy all currently selected upgrades
+        const buyBtn = document.getElementById('buySelectedBtn');
+        if (buyBtn) {
+            buyBtn.addEventListener('click', () => {
+                const selected = Array.from(document.querySelectorAll('.upgrade-btn.selected'));
+                selected.forEach(btn => {
+                    const upgradeType = btn.dataset.upgrade;
+                    this.eventEmitter.emit('upgrade-purchased', { upgradeType });
+                    btn.classList.remove('selected');
+                });
+            });
+        }
 
         document.getElementById('nextWaveBtn').addEventListener('click', () => {
             this.hideShop();
             this.eventEmitter.emit('next-wave-clicked', {});
+        });
+
+        // NEW: Solve Puzzle button opens in-page modal
+        document.getElementById('solvePuzzleBtn').addEventListener('click', () => {
+            openPuzzleModal();
         });
     }
 
@@ -166,23 +193,23 @@ class UIManager {
             this.currentPlayer = data.player;
             this.currentWaveManager = data.waveManager;
             this.currentShop = data.shop;
-            this.currentCurrency = data.currency;
-            this.updateShop(data.shop, data.currency);
-            this.updateHUD(data.player, data.waveManager, data.shop, data.currency);
+            this.currentCredits = data.credits;
+            this.updateShop(data.shop, data.credits);
+            this.updateHUD(data.player, data.waveManager, data.shop, data.credits);
         });
 
         this.eventEmitter.on('hud-updated', (data) => {
             this.currentPlayer = data.player;
             this.currentWaveManager = data.waveManager;
             this.currentShop = data.shop;
-            this.currentCurrency = data.currency;
-            this.updateHUD(data.player, data.waveManager, data.shop, data.currency);
+            this.currentCredits = data.credits;
+            this.updateHUD(data.player, data.waveManager, data.shop, data.credits);
         });
     }
 
-    updateHUD(player, waveManager, shop, currency) {
+    updateHUD(player, waveManager, shop, credits) {
         document.getElementById('waveDisplay').textContent = waveManager.currentWave;
-        document.getElementById('currencyDisplay').textContent = currency;
+        document.getElementById('creditsDisplay').textContent = credits;
         document.getElementById('ammoDisplay').textContent = `${player.currentAmmo}/${player.magazine}`;
         document.getElementById('healthDisplay').textContent = player.health;
 
@@ -198,8 +225,8 @@ class UIManager {
         });
     }
 
-    updateShop(shop, currency) {
-        document.getElementById('shopCurrency').textContent = currency;
+    updateShop(shop, credits) {
+        document.getElementById('shopCredits').textContent = credits;
 
         document.querySelectorAll('.upgrade-btn').forEach(btn => {
             const upgradeType = btn.dataset.upgrade;
@@ -212,7 +239,7 @@ class UIManager {
                 btn.disabled = true;
                 btn.classList.add('purchased');
                 btn.querySelector('.cost').textContent = 'MAX';
-            } else if (currency < cost) {
+            } else if (credits < cost) {
                 btn.disabled = true;
                 btn.classList.remove('purchased');
             } else {
@@ -222,9 +249,9 @@ class UIManager {
         });
     }
 
-    showShop(shop, currency) {
+    showShop(shop, credits) {
         this.shop.style.display = 'block';
-        this.updateShop(shop, currency);
+        this.updateShop(shop, credits);
     }
 
     hideShop() {
@@ -402,7 +429,7 @@ class Enemy {
         this.health -= damage;
         
         // Apply effects based on upgrades
-        if (upgrades.hasCryo) {
+        if (upgrades.hasTemporal) {
             this.slowEffect = 0.5;
             this.slowDuration = 2.0;
         }
@@ -443,7 +470,7 @@ class Enemy {
         
         // Add slow effect visual
         if (this.slowDuration > 0) {
-            ctx.strokeStyle = GameConfig.COLORS.CRYO_EFFECT;
+            ctx.strokeStyle = GameConfig.COLORS.TEMPORAL_EFFECT;
             ctx.lineWidth = 2;
             ctx.strokeRect(this.position.x - this.size/2, this.position.y - this.size/2, this.size, this.size);
         }
@@ -649,12 +676,12 @@ class Shop {
         return upgrades;
     }
 
-    purchaseUpgrade(upgradeType, currency) {
+    purchaseUpgrade(upgradeType, credits) {
         const upgrade = this.upgrades[upgradeType];
         if (!upgrade || upgrade.purchased >= upgrade.maxPurchases) return null;
 
         const cost = this.getUpgradeCost(upgradeType);
-        if (currency < cost) return null;
+        if (credits < cost) return null;
 
         upgrade.purchased++;
         const effect = this.getUpgradeEffect(upgradeType);
@@ -681,8 +708,8 @@ class Shop {
                 return { type: 'damage', value: 1.25 };
             case 'rapidFire':
                 return { type: 'fireRate', value: 0.8 };
-            case 'cryoRounds':
-                return { type: 'cryo', value: true };
+            case 'temporalRounds':
+                return { type: 'temporal', value: true };
             case 'quantumDisplacer':
                 return { type: 'quantum', value: true };
             case 'vampiricStrike':
@@ -799,30 +826,30 @@ class Game {
         this.particles = [];
         this.waveManager = new WaveManager();
         this.shop = new Shop(this.eventEmitter);
-        this.currency = 0;
+        this.credits = 0;
         this.mousePos = new Vector2(GameConfig.PLAYER.SPAWN_X, GameConfig.PLAYER.SPAWN_Y);
         this.keys = {};
         this.gameState = 'playing'; // 'playing', 'shop', 'gameOver'
         
         this.setupGameEventListeners();
         this.setupCanvasEventListeners();
-        this.uiManager.updateHUD(this.player, this.waveManager, this.shop, this.currency);
+        this.uiManager.updateHUD(this.player, this.waveManager, this.shop, this.credits);
         this.waveManager.startWave();
     }
 
     setupGameEventListeners() {
         // Handle upgrade purchase requests from UI
         this.eventEmitter.on('upgrade-purchased', (data) => {
-            const result = this.shop.purchaseUpgrade(data.upgradeType, this.currency);
+            const result = this.shop.purchaseUpgrade(data.upgradeType, this.credits);
             if (result) {
-                this.currency -= result.cost;
+                this.credits -= result.cost;
                 this.applyUpgradeEffect(result.effect);
                 this.audioManager.play('purchase');
                 this.eventEmitter.emit('shop-updated', {
                     player: this.player,
                     waveManager: this.waveManager,
                     shop: this.shop,
-                    currency: this.currency
+                    credits: this.credits
                 });
             }
         });
@@ -981,7 +1008,7 @@ class Game {
         // Collision detection with callback for decoupling
         const upgrades = {
             hasVampiric: this.shop.hasUpgrade('vampiricStrike'),
-            hasCryo: this.shop.hasUpgrade('cryoRounds'),
+            hasTemporal: this.shop.hasUpgrade('temporalRounds'),
             hasQuantum: this.shop.hasUpgrade('quantumDisplacer')
         };
 
@@ -1023,7 +1050,7 @@ class Game {
             player: this.player,
             waveManager: this.waveManager,
             shop: this.shop,
-            currency: this.currency
+            credits: this.credits
         });
     }
 
@@ -1037,7 +1064,7 @@ class Game {
                 data.size
             ));
         } else if (type === 'enemy-death') {
-            this.currency += this.waveManager.getWaveReward();
+            this.credits += this.waveManager.getWaveReward();
             if (data.shouldHeal) {
                 this.player.heal(5);
             }
@@ -1058,7 +1085,7 @@ class Game {
                 ));
             }
             this.audioManager.play('death');
-            // No currency reward for contact kills
+            // No credits reward for contact kills
         }
     }
 
@@ -1122,7 +1149,7 @@ class Game {
 
     startShop() {
         this.gameState = 'shop';
-        this.uiManager.showShop(this.shop, this.currency);
+        this.uiManager.showShop(this.shop, this.credits);
     }
 
     startNextWave() {
@@ -1150,3 +1177,78 @@ function gameLoop(currentTime) {
 }
 
 requestAnimationFrame(gameLoop);
+
+// ----------------------
+// Puzzle modal (in-page)
+// ----------------------
+let _puzzleModalSolution = null;
+
+async function loadPuzzleModal() {
+    const resultEl = document.getElementById('puzzleResult');
+    const imgEl = document.getElementById('puzzleImageModal');
+    try {
+        resultEl.innerHTML = 'Loading...';
+        imgEl.src = '';
+
+        const response = await fetch('https://marcconrad.com/uob/heart/api.php?out=json&base64=yes');
+        if (!response.ok) throw new Error('Network error ' + response.status);
+        const data = await response.json();
+        if (!data || !data.question) throw new Error('Invalid puzzle data');
+
+        imgEl.src = 'data:image/png;base64,' + data.question;
+        _puzzleModalSolution = data.solution;
+        resultEl.innerHTML = '';
+    } catch (err) {
+        console.error('Puzzle load failed:', err);
+        resultEl.innerHTML = '<span class="error">Failed to load API. Try again.</span>';
+    }
+}
+
+function openPuzzleModal() {
+    const modal = document.getElementById('puzzleModal');
+    const ans = document.getElementById('answerInputModal');
+    const resultEl = document.getElementById('puzzleResult');
+    modal.style.display = 'flex';
+    ans.value = '';
+    resultEl.innerHTML = '';
+    loadPuzzleModal();
+}
+
+function closePuzzleModal() {
+    const modal = document.getElementById('puzzleModal');
+    modal.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const checkBtn = document.getElementById('submitBtnModal');
+    const closeBtn = document.getElementById('closePuzzleBtn');
+    const answerInput = document.getElementById('answerInputModal');
+
+    if (checkBtn) {
+        checkBtn.addEventListener('click', () => {
+            const resultEl = document.getElementById('puzzleResult');
+            const val = parseInt(answerInput.value);
+            if (isNaN(val)) {
+                resultEl.innerHTML = '<span class="error">Please enter a number.</span>';
+                return;
+            }
+            if (val === _puzzleModalSolution) {
+                resultEl.innerHTML = '<span class="success">✅ Correct!<br>10 credits + 10 HP gained</span>';
+            } else {
+                resultEl.innerHTML = '<span class="error">❌ Incorrect. Try again.</span>';
+            }
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closePuzzleModal);
+    }
+
+    if (answerInput) {
+        answerInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('submitBtnModal').click();
+            }
+        });
+    }
+});
