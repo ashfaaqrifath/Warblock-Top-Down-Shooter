@@ -54,22 +54,29 @@ const GameConfig = {
     UPGRADES: {
         extendedMag: { cost: 50, maxPurchases: 10, costGrowth: 1.5 },
         highCaliber: { cost: 75, maxPurchases: 5, costGrowth: 1.5 },
-        temporalRounds: { cost: 100, maxPurchases: 1, costGrowth: 1.5 },
-        quantumDisplacer: { cost: 150, maxPurchases: 1, costGrowth: 1.5 },
+        temporalField: { cost: 100, maxPurchases: 1, costGrowth: 1.5 },
         vampiricStrike: { cost: 125, maxPurchases: 1, costGrowth: 1.5 },
         rapidFire: { cost: 80, maxPurchases: 3, costGrowth: 1.5 }
     },
     COLORS: {
         PLAYER: '#0099ff',
+        PLAYER_TEMPORAL: '#00ff84',
+        TEMPORAL_BG: '#224488',
         ENEMY: '#ff0000',
         HEALTH_BAR_BG: '#333',
         HEALTH_BAR_FILL: '#4a8a4a',
-        BULLET: '#ffff88',
+        BULLET: '#ffff00',
         PARTICLE_HIT: '#ff8888',
         PARTICLE_DEATH: '#ff4444',
-        TEMPORAL_EFFECT: '#88ccff',
+        TEMPORAL_EFFECT: '#88cbffa5',
         BACKGROUND: '#0a0a0a',
         GRID: '#1a1a1a'
+    },
+    TEMPORAL_FIELD: {
+        RADIUS: 180,
+        DURATION: 5.0,
+        COOLDOWN: 10.0,
+        SLOW_FACTOR: 0.8  // slowness
     }
 };
 
@@ -148,6 +155,12 @@ class UIManager {
     }
 
     setupShopListeners() {
+        // Clone and replace upgrade buttons to remove old listeners from previous game instances
+        document.querySelectorAll('.upgrade-btn').forEach(btn => {
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+        });
+
         // Toggle selection on click. Selection is visual; purchases occur when player confirms via upgrade.
         document.querySelectorAll('.upgrade-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -164,10 +177,13 @@ class UIManager {
             });
         });
 
-        // Buy all currently selected upgrades
+        // Buy all currently selected upgrades (clone button to remove old listeners)
         const buyBtn = document.getElementById('buySelectedBtn');
         if (buyBtn) {
-            buyBtn.addEventListener('click', () => {
+            const newBuyBtn = buyBtn.cloneNode(true);
+            buyBtn.parentNode.replaceChild(newBuyBtn, buyBtn);
+            
+            newBuyBtn.addEventListener('click', () => {
                 const selected = Array.from(document.querySelectorAll('.upgrade-btn.selected'));
                 selected.forEach(btn => {
                     const upgradeType = btn.dataset.upgrade;
@@ -177,15 +193,27 @@ class UIManager {
             });
         }
 
-        document.getElementById('nextWaveBtn').addEventListener('click', () => {
-            this.hideShop();
-            this.eventEmitter.emit('next-wave-clicked', {});
-        });
+        const nextWaveBtn = document.getElementById('nextWaveBtn');
+        if (nextWaveBtn) {
+            const newNextWaveBtn = nextWaveBtn.cloneNode(true);
+            nextWaveBtn.parentNode.replaceChild(newNextWaveBtn, nextWaveBtn);
+            
+            newNextWaveBtn.addEventListener('click', () => {
+                this.hideShop();
+                this.eventEmitter.emit('next-wave-clicked', {});
+            });
+        }
 
-        // NEW: Solve Puzzle button opens in-page modal
-        document.getElementById('solvePuzzleBtn').addEventListener('click', () => {
-            openPuzzleModal();
-        });
+        // NEW: Solve Puzzle button opens in-page modal (clone to remove old listeners)
+        const solvePuzzleBtn = document.getElementById('solvePuzzleBtn');
+        if (solvePuzzleBtn) {
+            const newSolvePuzzleBtn = solvePuzzleBtn.cloneNode(true);
+            solvePuzzleBtn.parentNode.replaceChild(newSolvePuzzleBtn, solvePuzzleBtn);
+            
+            newSolvePuzzleBtn.addEventListener('click', () => {
+                openPuzzleModal();
+            });
+        }
     }
 
     setupEventListeners() {
@@ -428,18 +456,10 @@ class Enemy {
     takeDamage(damage, upgrades) {
         this.health -= damage;
         
-        // Apply effects based on upgrades
-        if (upgrades.hasTemporal) {
-            this.slowEffect = 0.5;
-            this.slowDuration = 2.0;
-        }
+        // Note: slow-on-hit removed. Temporal effects are only applied by the
+        // active temporal field (handled in Game.update when the field is active).
 
-        if (upgrades.hasQuantum && Math.random() < 0.2) {
-            this.position = new Vector2(
-                Math.random() * GameConfig.CANVAS.WIDTH,
-                Math.random() * GameConfig.CANVAS.HEIGHT
-            );
-        }
+        // Quantum displacement removed: enemies are no longer teleported on hit.
 
         const isDead = this.health <= 0;
         if (isDead) {
@@ -463,19 +483,35 @@ class Enemy {
         const healthWidth = (this.health / this.maxHealth) * 30;
         ctx.fillRect(this.position.x - 15, healthBarY, healthWidth, 4);
 
-        // Draw enemy with aggro pulse
-        const pulseIntensity = Math.sin(this.aggroTime) * 0.2 + 0.8;
-        const red = Math.floor(255 * pulseIntensity);
-        ctx.fillStyle = `rgb(${red}, 0, 0)`;
-        
-        // Add slow effect visual
-        if (this.slowDuration > 0) {
-            ctx.strokeStyle = GameConfig.COLORS.TEMPORAL_EFFECT;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(this.position.x - this.size/2, this.position.y - this.size/2, this.size, this.size);
+        // Determine if enemy is inside the active temporal field
+        let inTemporalField = false;
+        if (typeof game !== 'undefined' && game && game.temporalFieldActive && game.player) {
+            const dist = this.position.distance(game.player.position);
+            if (dist < GameConfig.TEMPORAL_FIELD.RADIUS) inTemporalField = true;
         }
-        
-        ctx.fillRect(this.position.x - this.size/2, this.position.y - this.size/2, this.size, this.size);
+
+        if (inTemporalField) {
+
+            ctx.save();
+            ctx.shadowColor = GameConfig.COLORS.TEMPORAL_EFFECT;
+            ctx.fillStyle = GameConfig.COLORS.TEMPORAL_EFFECT;
+            ctx.fillRect(this.position.x - this.size/2, this.position.y - this.size/2, this.size, this.size);
+            ctx.restore();
+        } else {
+            // Draw enemy with aggro pulse
+            const pulseIntensity = Math.sin(this.aggroTime) * 0.2 + 0.8;
+            const red = Math.floor(255 * pulseIntensity);
+            ctx.fillStyle = `rgb(${red}, 0, 0)`;
+            
+            // Add slow effect visual (stroke)
+            if (this.slowDuration > 0) {
+                ctx.strokeStyle = GameConfig.COLORS.TEMPORAL_EFFECT;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.position.x - this.size/2, this.position.y - this.size/2, this.size, this.size);
+            }
+            
+            ctx.fillRect(this.position.x - this.size/2, this.position.y - this.size/2, this.size, this.size);
+        }
     }
 }
 
@@ -497,6 +533,8 @@ class Player {
         this.lastShot = 0;
         this.damage = GameConfig.PLAYER.DAMAGE_BASE;
         this.lastContactDamageTime = 0;
+        this.isTemporalActive = false;
+        this.pulseTimer = 0;
     }
 
     update(deltaTime, mousePos) {
@@ -527,6 +565,8 @@ class Player {
 
         // Update contact damage cooldown
         this.lastContactDamageTime -= deltaTime;
+        // Update pulse timer for temporal visual effects
+        if (this.pulseTimer !== undefined) this.pulseTimer += deltaTime;
     }
 
     move(direction) {
@@ -571,16 +611,37 @@ class Player {
         const healthWidth = (this.health / this.maxHealth) * 30;
         ctx.fillRect(this.position.x - 15, healthBarY, healthWidth, 4);
 
-        // Draw player
+        // Draw player (with temporal pulse when active)
         ctx.save();
         ctx.translate(this.position.x, this.position.y);
         ctx.rotate(this.rotation);
-        ctx.fillStyle = GameConfig.COLORS.PLAYER;
-        ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
-        
-        // Draw direction indicator
-        ctx.fillStyle = '#6aaa6a';
-        ctx.fillRect(this.size/4, -2, this.size/2, 4);
+
+        if (this.isTemporalActive) {
+            const freq = 8; // pulse frequency
+            const t = this.pulseTimer || 0;
+            const pulse = (Math.sin(t * freq) + 1) / 2; // 0..1
+
+            // glow using shadowBlur and varying alpha
+            ctx.shadowColor = GameConfig.COLORS.PLAYER_TEMPORAL;
+            ctx.shadowBlur = 8 + pulse * 12;
+            ctx.globalAlpha = 0.85 + pulse * 0.15;
+            ctx.fillStyle = GameConfig.COLORS.PLAYER_TEMPORAL;
+            ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+
+            // reset shadow and alpha for direction indicator
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#6aaa6a';
+            ctx.fillRect(this.size/4, -2, this.size/2, 4);
+        } else {
+            ctx.fillStyle = GameConfig.COLORS.PLAYER;
+            ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+
+            // Draw direction indicator
+            ctx.fillStyle = '#6aaa6a';
+            ctx.fillRect(this.size/4, -2, this.size/2, 4);
+        }
+
         ctx.restore();
     }
 }
@@ -708,10 +769,8 @@ class Shop {
                 return { type: 'damage', value: 1.25 };
             case 'rapidFire':
                 return { type: 'fireRate', value: 0.8 };
-            case 'temporalRounds':
+            case 'temporalField':
                 return { type: 'temporal', value: true };
-            case 'quantumDisplacer':
-                return { type: 'quantum', value: true };
             case 'vampiricStrike':
                 return { type: 'vampiric', value: true };
             default:
@@ -830,6 +889,10 @@ class Game {
         this.mousePos = new Vector2(GameConfig.PLAYER.SPAWN_X, GameConfig.PLAYER.SPAWN_Y);
         this.keys = {};
         this.gameState = 'playing'; // 'playing', 'shop', 'gameOver'
+
+        this.temporalFieldActive = false;
+        this.temporalFieldTimer = 0;
+        this.temporalFieldCooldown = 0;
         
         this.setupGameEventListeners();
         this.setupCanvasEventListeners();
@@ -894,6 +957,7 @@ class Game {
                 e.clientY - rect.top
             );
         });
+        
 
         // Mouse click for shooting
         this.canvas.addEventListener('mousedown', (e) => {
@@ -901,7 +965,7 @@ class Game {
                 const bullet = this.player.shoot(this.mousePos);
                 if (bullet) {
                     this.bullets.push(bullet);
-                    this.createMuzzleFlash();
+                    this.createMuzzleFlash(3);
                     this.audioManager.play('shoot');
                 }
             }
@@ -940,6 +1004,7 @@ class Game {
                     this.audioManager.play('reload');
                 }
             }
+
         });
 
         document.addEventListener('keyup', (e) => {
@@ -947,7 +1012,14 @@ class Game {
         });
     }
 
-    createMuzzleFlash() {
+    activateTemporalField() {
+        if (this.temporalFieldActive || this.temporalFieldCooldown > 0) return;
+        this.temporalFieldActive = true;
+        this.temporalFieldTimer = GameConfig.TEMPORAL_FIELD.DURATION;
+        this.temporalFieldCooldown = GameConfig.TEMPORAL_FIELD.COOLDOWN;
+    }
+
+    createMuzzleFlash(flashSize) {
         for (let i = 0; i < 8; i++) {
             const angle = this.player.rotation + (Math.random() - 0.5) * 0.5;
             const speed = 100 + Math.random() * 150;
@@ -958,7 +1030,7 @@ class Game {
                 Math.sin(angle) * speed,
                 GameConfig.COLORS.BULLET,
                 0.2,
-                3
+                flashSize
             ));
         }
     }
@@ -975,6 +1047,12 @@ class Game {
 
         if (moveDirection.magnitude() > 0) {
             this.player.move(moveDirection.normalize());
+        }
+
+        // Handle Temporal Field activation (T key)
+        if (this.keys['t'] && this.shop.hasUpgrade('temporalField')) {
+            this.activateTemporalField();
+            this.keys['t'] = false; // Consume the key press
         }
 
         // Update game objects
@@ -1004,12 +1082,41 @@ class Game {
             this.uiManager.hideReloadBar();
         }
 
+        // ========== NEW: Temporal Field Logic ==========
+        // Update timers
+        if (this.temporalFieldActive) {
+            this.temporalFieldTimer -= deltaTime;
+            if (this.temporalFieldTimer <= 0) {
+                this.temporalFieldActive = false;
+            }
+        }
+        if (this.temporalFieldCooldown > 0) {
+            this.temporalFieldCooldown -= deltaTime;
+        }
+
+        // Apply slow to enemies inside the field
+        if (this.temporalFieldActive) {
+            const fieldRadius = GameConfig.TEMPORAL_FIELD.RADIUS;
+            const slowFactor = GameConfig.TEMPORAL_FIELD.SLOW_FACTOR;
+            this.enemies.forEach(enemy => {
+                const distance = enemy.position.distance(this.player.position);
+                if (distance < fieldRadius) {
+                    // Set slow effect – will be reapplied each frame while inside
+                    enemy.slowEffect = slowFactor;
+                    enemy.slowDuration = 0.1; // short duration so it's continuously reapplied
+                }
+            });
+        }
+        // ========== END Temporal Field ==========
+
+        // Reflect temporal field state on player for visuals
+        if (this.player) this.player.isTemporalActive = this.temporalFieldActive;
+
         
         // Collision detection with callback for decoupling
         const upgrades = {
             hasVampiric: this.shop.hasUpgrade('vampiricStrike'),
-            hasTemporal: this.shop.hasUpgrade('temporalRounds'),
-            hasQuantum: this.shop.hasUpgrade('quantumDisplacer')
+            hasTemporal: this.shop.hasUpgrade('temporalField')
         };
 
         // Bullet vs enemies
@@ -1090,9 +1197,48 @@ class Game {
     }
 
     draw() {
-        // Clear canvas
+        // Clear canvas with normal background
         this.ctx.fillStyle = GameConfig.COLORS.BACKGROUND;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // If temporal field active, paint a pulsing radial gradient (background only)
+        if (this.temporalFieldActive) {
+            this.ctx.save();
+
+            const t = (this.player && this.player.pulseTimer) ? this.player.pulseTimer : 0;
+            const freq = 3.0; // pulse frequency
+            const pulse = (Math.sin(t * freq) + 1) / 2; // 0..1
+
+            // alpha values modulated by pulse
+            const alphaInner = 0.45 + pulse * 0.25; // inner brightness
+            const alphaOuter = 0.05 + pulse * 0.1;  // outer fade
+
+            // use temporal effect (light blue) for inner color and temporal bg for outer
+            const hexInner = GameConfig.COLORS.TEMPORAL_EFFECT.replace('#','');
+            const numInner = parseInt(hexInner, 16);
+            const ri = (numInner >> 16) & 255;
+            const gi = (numInner >> 8) & 255;
+            const bi = numInner & 255;
+
+            const hexOuter = GameConfig.COLORS.TEMPORAL_BG.replace('#','');
+            const numOuter = parseInt(hexOuter, 16);
+            const ro = (numOuter >> 16) & 255;
+            const go = (numOuter >> 8) & 255;
+            const bo = numOuter & 255;
+
+            const grd = this.ctx.createRadialGradient(
+                this.player.position.x, this.player.position.y, 0,
+                this.player.position.x, this.player.position.y, GameConfig.TEMPORAL_FIELD.RADIUS
+            );
+            grd.addColorStop(0, `rgba(${ri},${gi},${bi},${alphaInner})`);
+            grd.addColorStop(1, `rgba(${ro},${go},${bo},${alphaOuter})`);
+
+            this.ctx.fillStyle = grd;
+            this.ctx.beginPath();
+            this.ctx.arc(this.player.position.x, this.player.position.y, GameConfig.TEMPORAL_FIELD.RADIUS, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.restore();
+        }
 
         // Draw grid
         this.ctx.strokeStyle = GameConfig.COLORS.GRID;
@@ -1144,6 +1290,19 @@ class Game {
             this.ctx.font = '24px Chakra Petch';
             this.ctx.fillText(`Wave Reached: ${this.waveManager.currentWave - 1}`, this.canvas.width / 2, this.canvas.height / 2 + 60);
             this.ctx.fillText('Press Enter to restart', this.canvas.width / 2, this.canvas.height / 2 + 100);  // <-- changed
+        }
+
+        // Draw temporal field if active
+        if (this.temporalFieldActive) {
+            this.ctx.save();
+            this.ctx.strokeStyle = '#88ccff'; 
+            this.ctx.lineWidth = 2;
+            this.ctx.setLineDash([5, 5]); // dashed line for distinction
+            this.ctx.beginPath();
+            this.ctx.arc(this.player.position.x, this.player.position.y, GameConfig.TEMPORAL_FIELD.RADIUS, 0, Math.PI * 2);
+            this.ctx.stroke();
+            this.ctx.setLineDash([]); // reset
+            this.ctx.restore();
         }
     }
 
@@ -1204,6 +1363,39 @@ async function loadPuzzleModal() {
     }
 }
 
+// Leaderboard placeholder data and render helper
+const leaderboardPlaceholder = [
+    { name: 'Rachinter', waves: 'Waves: 12' },
+    { name: 'Sainz', waves: 'Waves: 9' },
+    { name: 'Verstappen', waves: 'Waves: 7' },
+    { name: 'Hulkenberg', waves: 'Waves: 5' },
+    { name: 'Piastri', waves: 'Waves: 3' },
+    { name: 'Leclerc', waves: 'Waves: 3' }
+];
+
+function renderLeaderboard(list) {
+    const container = document.getElementById('leaderboardList');
+    if (!container) return;
+    container.innerHTML = '';
+    list.sort((a,b) => b.waves - a.waves).forEach((p, i) => {
+        const item = document.createElement('div');
+        item.className = 'leader-item';
+        const posEl = document.createElement('span');
+        posEl.className = 'pos';
+        posEl.textContent = (i+1) + '.';
+        const nameEl = document.createElement('span');
+        nameEl.className = 'name';
+        nameEl.textContent = p.name;
+        const wavesEl = document.createElement('span');
+        wavesEl.className = 'waves';
+        wavesEl.textContent = p.waves;
+        item.appendChild(posEl);
+        item.appendChild(nameEl);
+        item.appendChild(wavesEl);
+        container.appendChild(item);
+    });
+}
+
 function openPuzzleModal() {
     const modal = document.getElementById('puzzleModal');
     const ans = document.getElementById('answerInputModal');
@@ -1234,6 +1426,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (val === _puzzleModalSolution) {
                 resultEl.innerHTML = '<span class="success">✅ Correct!<br>10 credits + 10 HP gained</span>';
+
+                // Grant rewards to the player if the game is initialized
+                if (typeof game !== 'undefined' && game) {
+                    game.credits = (game.credits || 0) + 10;
+                    if (game.player && typeof game.player.heal === 'function') {
+                        game.player.heal(10);
+                    }
+                    // Update HUD to reflect new credits and health
+                    if (game.eventEmitter) {
+                        game.eventEmitter.emit('hud-updated', {
+                            player: game.player,
+                            waveManager: game.waveManager,
+                            shop: game.shop,
+                            credits: game.credits
+                        });
+                    }
+                }
+
             } else {
                 resultEl.innerHTML = '<span class="error">❌ Incorrect. Try again.</span>';
             }
@@ -1251,4 +1461,48 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Login modal handling
+    const loginBtn = document.getElementById('loginBtn');
+    const loginModal = document.getElementById('loginModal');
+    const closeLoginBtn = document.getElementById('closeLoginBtn');
+    const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+    const loginUsername = document.getElementById('loginUsername');
+    const loginPassword = document.getElementById('loginPassword');
+    const loginResult = document.getElementById('loginResult');
+
+    if (loginBtn && loginModal) {
+        loginBtn.addEventListener('click', () => {
+            if (!loginModal) return;
+            loginModal.style.display = 'flex';
+            if (loginUsername) loginUsername.value = '';
+            if (loginPassword) loginPassword.value = '';
+            if (loginResult) loginResult.innerHTML = '';
+        });
+    }
+
+    if (closeLoginBtn) {
+        closeLoginBtn.addEventListener('click', () => {
+            if (loginModal) loginModal.style.display = 'none';
+        });
+    }
+
+    if (loginSubmitBtn) {
+        loginSubmitBtn.addEventListener('click', () => {
+            const user = loginUsername ? loginUsername.value.trim() : '';
+            // Note: no real auth here — simple UI flow
+            if (!user) {
+                if (loginResult) loginResult.innerHTML = '<span class="error">Enter a username.</span>';
+                return;
+            }
+            // Close modal and update display
+            if (loginModal) loginModal.style.display = 'none';
+            const userDisplay = document.getElementById('userDisplay');
+            if (userDisplay) userDisplay.innerHTML = `<i class="fas fa-user-circle"></i>&nbsp ${user}`;
+        });
+    }
+
+    
+    // render initial leaderboard placeholders
+    renderLeaderboard(leaderboardPlaceholder);
 });
