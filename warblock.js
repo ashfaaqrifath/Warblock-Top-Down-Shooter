@@ -29,7 +29,7 @@ const GameConfig = {
         SPAWN_Y: 300,
         SIZE: 12,
         MAX_HEALTH: 100,
-        SPEED: 200,
+        SPEED: 80,
         MAGAZINE_BASE: 30,
         FIRE_RATE: 0.2,
         RELOAD_TIME: 2.0,
@@ -48,15 +48,16 @@ const GameConfig = {
         BASE_ENEMIES: 5,
         GROWTH_RATE: 1.3,
         SPAWN_INTERVAL: 1.0,
-        REWARD_BASE: 50,
-        REWARD_GROWTH: 1.2
+        REWARD_BASE: 5,
+        REWARD_GROWTH: 1
     },
     UPGRADES: {
-        extendedMag: { cost: 50, maxPurchases: 10, costGrowth: 1.5 },
-        highCaliber: { cost: 75, maxPurchases: 5, costGrowth: 1.5 },
-        temporalField: { cost: 100, maxPurchases: 1, costGrowth: 1.5 },
-        vampiricStrike: { cost: 125, maxPurchases: 1, costGrowth: 1.5 },
-        rapidFire: { cost: 80, maxPurchases: 3, costGrowth: 1.5 }
+        extendedMag: { cost: 25, maxPurchases: 10, costGrowth: 1.5 },
+        highCaliber: { cost: 50, maxPurchases: 5, costGrowth: 1.5 },
+        temporalField: { cost: 80, maxPurchases: 1, costGrowth: 1.5 },
+        siphonRounds: { cost: 75, maxPurchases: 1, costGrowth: 1.5 },
+        damageImmunity: { cost: 5, maxPurchases: 1, costGrowth: 1.5 },
+        empBlast: { cost: 5, maxPurchases: 1, costGrowth: 1.5 }
     },
     COLORS: {
         PLAYER: '#0099ff',
@@ -246,7 +247,7 @@ class UIManager {
         Object.keys(shop.upgrades).forEach(upgradeType => {
             if (shop.hasUpgrade(upgradeType)) {
                 const icon = document.createElement('div');
-                icon.style.cssText = 'display: inline-block; margin: 2px; padding: 2px 6px; background: #2a4a2a; border: 1px solid #4a7a4a; border-radius: 3px; font-size: 10px;';
+                icon.style.cssText = 'margin: 2px; padding: 2px 6px; background: #2a4a2a; border: 1px solid #4a7a4a; border-radius: 3px; font-size: 8px;';
                 icon.textContent = upgradeType.charAt(0).toUpperCase() + upgradeType.slice(1);
                 upgradeIcons.appendChild(icon);
             }
@@ -456,10 +457,6 @@ class Enemy {
     takeDamage(damage, upgrades) {
         this.health -= damage;
         
-        // Note: slow-on-hit removed. Temporal effects are only applied by the
-        // active temporal field (handled in Game.update when the field is active).
-
-        // Quantum displacement removed: enemies are no longer teleported on hit.
 
         const isDead = this.health <= 0;
         if (isDead) {
@@ -468,7 +465,7 @@ class Enemy {
 
         return {
             isDead,
-            shouldHeal: upgrades.hasVampiric && isDead
+            shouldHeal: upgrades.hasSiphonRounds && isDead
         };
     }
 
@@ -535,6 +532,7 @@ class Player {
         this.lastContactDamageTime = 0;
         this.isTemporalActive = false;
         this.pulseTimer = 0;
+        this.damageImmunityTimer = 0;
     }
 
     update(deltaTime, mousePos) {
@@ -567,6 +565,8 @@ class Player {
         this.lastContactDamageTime -= deltaTime;
         // Update pulse timer for temporal visual effects
         if (this.pulseTimer !== undefined) this.pulseTimer += deltaTime;
+        // Update damage immunity timer
+        if (this.damageImmunityTimer > 0) this.damageImmunityTimer -= deltaTime;
     }
 
     move(direction) {
@@ -594,6 +594,7 @@ class Player {
     }
 
     takeDamage(damage) {
+        if (this.damageImmunityTimer > 0) return;
         this.health -= damage;
         if (this.health < 0) this.health = 0;
     }
@@ -617,6 +618,32 @@ class Player {
         ctx.rotate(this.rotation);
 
         if (this.isTemporalActive) {
+            const freq = 8; // pulse frequency
+            const t = this.pulseTimer || 0;
+            const pulse = (Math.sin(t * freq) + 1) / 2; // 0..1
+
+            // glow using shadowBlur and varying alpha
+            ctx.shadowColor = GameConfig.COLORS.PLAYER_TEMPORAL;
+            ctx.shadowBlur = 8 + pulse * 12;
+            ctx.globalAlpha = 0.85 + pulse * 0.15;
+            ctx.fillStyle = GameConfig.COLORS.PLAYER_TEMPORAL;
+            ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+
+            // reset shadow and alpha for direction indicator
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#6aaa6a';
+            ctx.fillRect(this.size/4, -2, this.size/2, 4);
+        } else {
+            ctx.fillStyle = GameConfig.COLORS.PLAYER;
+            ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+
+            // Draw direction indicator
+            ctx.fillStyle = '#6aaa6a';
+            ctx.fillRect(this.size/4, -2, this.size/2, 4);
+        }
+
+        if (this.damageImmunityTimer > 0) {
             const freq = 8; // pulse frequency
             const t = this.pulseTimer || 0;
             const pulse = (Math.sin(t * freq) + 1) / 2; // 0..1
@@ -767,12 +794,14 @@ class Shop {
                 return { type: 'magazine', value: 5 };
             case 'highCaliber':
                 return { type: 'damage', value: 1.25 };
-            case 'rapidFire':
-                return { type: 'fireRate', value: 0.8 };
+            case 'damageImmunity':
+                return { type: 'immunity', value: 5 };
             case 'temporalField':
                 return { type: 'temporal', value: true };
-            case 'vampiricStrike':
-                return { type: 'vampiric', value: true };
+            case 'siphonRounds':
+                return { type: 'siphon', value: true };
+            case 'empBlast':
+                return { type: 'empBlast', value: true };
             default:
                 return { type: 'none', value: null };
         }
@@ -894,6 +923,8 @@ class Game {
         this.temporalFieldTimer = 0;
         this.temporalFieldCooldown = 0;
         
+        this.empBlastCooldown = 0;
+        
         this.setupGameEventListeners();
         this.setupCanvasEventListeners();
         this.uiManager.updateHUD(this.player, this.waveManager, this.shop, this.credits);
@@ -929,6 +960,8 @@ class Game {
             this.player.isReloading = false;
             this.uiManager.hideReloadBar();
 
+            this.empBlastUsedThisWave = false;
+
             this.gameState = 'playing';
             this.waveManager.startWave();
         });
@@ -944,6 +977,9 @@ class Game {
                 break;
             case 'fireRate':
                 this.player.fireRate *= effect.value;
+                break;
+            case 'immunity':
+                this.player.damageImmunityTimer = effect.value;
                 break;
         }
     }
@@ -1005,6 +1041,18 @@ class Game {
                 }
             }
 
+            if (e.key.toLowerCase() === 'i' && this.gameState === 'playing') {
+                if (this.shop.hasUpgrade('damageImmunity') && this.player.damageImmunityTimer <= 0) {
+                    this.player.damageImmunityTimer = 5;
+                }
+            }
+
+            if (e.key.toLowerCase() === 'e' && this.gameState === 'playing') {
+                if (this.shop.hasUpgrade('empBlast') && this.empBlastCooldown <= 0) {
+                    this.activateEmpBlast();
+                }
+            }
+
         });
 
         document.addEventListener('keyup', (e) => {
@@ -1017,6 +1065,70 @@ class Game {
         this.temporalFieldActive = true;
         this.temporalFieldTimer = GameConfig.TEMPORAL_FIELD.DURATION;
         this.temporalFieldCooldown = GameConfig.TEMPORAL_FIELD.COOLDOWN;
+    }
+
+    activateEmpBlast() {
+        // Can only be used once per wave, and must own the upgrade
+        if (!this.shop.hasUpgrade('empBlast') || this.empBlastUsedThisWave) return;
+        this.empBlastUsedThisWave = true;
+
+        const blastRadius = 180;
+        const enemiesToRemove = [];
+
+        // Find and kill all enemies within radius
+        this.enemies.forEach(enemy => {
+            const distance = enemy.position.distance(this.player.position);
+            if (distance < blastRadius) {
+                enemy.active = false;
+                enemiesToRemove.push(enemy);
+                this.credits += this.waveManager.getWaveReward(); // give reward
+            }
+        });
+
+        // ===== Enhanced explosion effect =====
+        const centerX = this.player.position.x;
+        const centerY = this.player.position.y;
+
+        // Main explosion burst – many particles in red/orange/yellow shades
+        for (let i = 0; i < 80; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 200 + Math.random() * 400;
+            const size = 4 + Math.random() * 6;
+            // Random warm color
+            const r = 255;
+            const g = 100 + Math.floor(Math.random() * 155);
+            const b = 0;
+            const color = `rgb(${r}, ${g}, ${b})`;
+
+            this.particles.push(new Particle(
+                centerX,
+                centerY,
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed,
+                color,
+                0.8,
+                size
+            ));
+        }
+
+        // Additional shockwave ring (larger, slower particles)
+        for (let i = 0; i < 20; i++) {
+            const angle = (i / 20) * Math.PI * 2;
+            const speed = 150;
+            const size = 8;
+            this.particles.push(new Particle(
+                centerX,
+                centerY,
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed,
+                '#ff0000',
+                0.6,
+                size
+            ));
+        }
+
+        // Play death sound (already there)
+        this.audioManager.play('death');
     }
 
     createMuzzleFlash(flashSize) {
@@ -1094,6 +1206,12 @@ class Game {
             this.temporalFieldCooldown -= deltaTime;
         }
 
+        // Update EMP Blast cooldown
+        if (this.empBlastCooldown > 0) {
+            this.empBlastCooldown -= deltaTime;
+        }
+        // ========== END EMP Blast ==========
+
         // Apply slow to enemies inside the field
         if (this.temporalFieldActive) {
             const fieldRadius = GameConfig.TEMPORAL_FIELD.RADIUS;
@@ -1115,7 +1233,7 @@ class Game {
         
         // Collision detection with callback for decoupling
         const upgrades = {
-            hasVampiric: this.shop.hasUpgrade('vampiricStrike'),
+            hasSiphonRounds: this.shop.hasUpgrade('siphonRounds'),
             hasTemporal: this.shop.hasUpgrade('temporalField')
         };
 
