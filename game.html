@@ -101,7 +101,7 @@
             </div>
         </div>
 
-        
+
 
         <div class="reload-bar" id="reloadBar" style="display: none;">
             <div class="reload-fill" id="reloadFill"></div>
@@ -112,50 +112,6 @@
 
 
 
-    <script type="module">
-
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-
-        const SUPABASE_URL = "PROJECT URL"
-        const SUPABASE_KEY = "API KEY"
-
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-
-        async function loadUsername(){
-
-        const { data: sessionData } = await supabase.auth.getSession()
-
-
-        const email = sessionData.session.user.email
-
-        const { data, error } = await supabase
-            .from("leaderboard")
-            .select("username, waves")
-            .eq("email", email)
-            .single()
-
-        if(data){
-            document.getElementById("usernameDisplay").textContent = data.username
-            document.getElementById("wavesDisplay").textContent = data.waves
-        }else{
-            document.getElementById("usernameDisplay").textContent = "Username not found"
-        }
-
-        }
-
-        loadUsername()
-
-        document.getElementById("logoutBtn").onclick = async () => {
-            await supabase.auth.signOut()
-            window.location.href = "index.html"
-        }
-
-
-    </script>
-
-
-
-
-    <script src="warblock.js"></script>
+    <script type="module" src="warblock.js"></script>
 </body>
 </html>
