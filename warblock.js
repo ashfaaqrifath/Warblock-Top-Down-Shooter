@@ -1269,6 +1269,10 @@ class Game {
         if (this.player.health <= 0 && this.gameState !== 'gameOver') {
             this.gameState = 'gameOver';
             this.uiManager.hideShop(); // Hide shop if it was open
+            
+            // Save waves to database
+            const wavesReached = this.waveManager.currentWave - 1;
+            saveWavesToDatabase(wavesReached);
         }
 
         this.eventEmitter.emit('hud-updated', {
@@ -1580,47 +1584,89 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Login modal handling
-    const loginBtn = document.getElementById('loginBtn');
-    const loginModal = document.getElementById('loginModal');
-    const closeLoginBtn = document.getElementById('closeLoginBtn');
-    const loginSubmitBtn = document.getElementById('loginSubmitBtn');
-    const loginUsername = document.getElementById('loginUsername');
-    const loginPassword = document.getElementById('loginPassword');
-    const loginResult = document.getElementById('loginResult');
 
-    if (loginBtn && loginModal) {
-        loginBtn.addEventListener('click', () => {
-            if (!loginModal) return;
-            loginModal.style.display = 'flex';
-            if (loginUsername) loginUsername.value = '';
-            if (loginPassword) loginPassword.value = '';
-            if (loginResult) loginResult.innerHTML = '';
-        });
-    }
-
-    if (closeLoginBtn) {
-        closeLoginBtn.addEventListener('click', () => {
-            if (loginModal) loginModal.style.display = 'none';
-        });
-    }
-
-    if (loginSubmitBtn) {
-        loginSubmitBtn.addEventListener('click', () => {
-            const user = loginUsername ? loginUsername.value.trim() : '';
-            // Note: no real auth here — simple UI flow
-            if (!user) {
-                if (loginResult) loginResult.innerHTML = '<span class="error">Enter a username.</span>';
-                return;
-            }
-            // Close modal and update display
-            if (loginModal) loginModal.style.display = 'none';
-            const userDisplay = document.getElementById('userDisplay');
-            if (userDisplay) userDisplay.innerHTML = `<i class="fas fa-user-circle"></i>&nbsp ${user}`;
-        });
-    }
 
     
     // render initial leaderboard placeholders
     renderLeaderboard(leaderboardPlaceholder);
 });
+
+// ============================================================
+// SUPABASE AUTHENTICATION & LEADERBOARD
+// ============================================================
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+const SUPABASE_URL = "https://rnkjnwgkbntinkhgrbpm.supabase.co"
+const SUPABASE_KEY = "sb_publishable_mSMt53nucVEn5liO4sZuSQ_Xm_sX4Nz"
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+async function loadUsername(){
+
+    const { data: sessionData } = await supabase.auth.getSession()
+
+
+    const email = sessionData.session.user.email
+
+    const { data, error } = await supabase
+        .from("leaderboard")
+        .select("username, waves")
+        .eq("email", email)
+        .single()
+
+    if(data){
+        document.getElementById("usernameDisplay").textContent = data.username
+        document.getElementById("wavesDisplay").textContent = data.waves
+    }else{
+        document.getElementById("usernameDisplay").textContent = "Username not found"
+    }
+
+}
+
+async function saveWavesToDatabase(wavesReached) {
+    try {
+        const { data: sessionData } = await supabase.auth.getSession()
+        
+
+        const email = sessionData.session.user.email
+
+        // Get the current user's record
+        const { data: existingData, error: fetchError } = await supabase
+            .from("leaderboard")
+            .select("waves")
+            .eq("email", email)
+            .single()
+
+        if (fetchError && fetchError.code !== 'PGRST116') {
+            console.error("Error fetching user data:", fetchError)
+            return
+        }
+
+        // Only update if the new waves count is higher than the current one
+        const currentWaves = existingData?.waves || 0
+        if (wavesReached > currentWaves) {
+            const { error: updateError } = await supabase
+                .from("leaderboard")
+                .update({ waves: wavesReached })
+                .eq("email", email)
+
+            if (updateError) {
+                console.error("Error updating waves:", updateError)
+            } else {
+                // Update the UI to show the new highscore
+                document.getElementById("wavesDisplay").textContent = wavesReached
+            }
+        } else {
+            console.log(`Less than highscore (${currentWaves})`)
+        }
+    } catch (error) {
+        console.error("Error in saveWavesToDatabase:", error)
+    }
+}
+
+loadUsername()
+
+document.getElementById("logoutBtn").onclick = async () => {
+    await supabase.auth.signOut()
+    window.location.href = "index.html"
+}
