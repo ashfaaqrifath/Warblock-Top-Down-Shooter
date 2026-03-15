@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warblock - Top Down Shooter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="shortcut icon" href="mylogo3.png">
+</head>
+<body>
+    <div id="leaderboard">
+        <h3>Leaderboard</h3>
+        <div id="leaderboardList">
+            <!-- leaderboard entries will be here -->
+        </div>
+    </div>
+
+    <div id="topRightControls">
+        <div id="userDisplay">
+            <i class="fas fa-user-circle"></i>&nbsp <span id="usernameDisplay">Loading...</span>
+            <br>
+            <h3>Highscore: <span id="highscoreDisplay">Loading...</span> levels</h3>
+        </div>
+        <br>
+        <div id="authButtons">
+            
+            <button id="logoutBtn" class="top-btn">Logout</button>
+        </div>
+        <br>
+    </div>
+
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="hud">
+            <div style="color: #fff;">Level: <span id="levelDisplay">1</span></div>
+            <div style="color: #ffd966;">Credits: <span id="creditsDisplay">0</span></div>
+            <div style="color: #0099ff;">Ammo: <span id="ammoDisplay">30/30</span></div>
+            <div style="color: #00ff84d8;">Health: <span id="healthDisplay">100</span></div>
+        </div>
+
+        
+        <div id="upgradeIcons"></div>
+
+        <div id="shop">
+            <h2>Upgrades</h2>
+            <p style="color: #ffd966;">Credits: <span id="shopCredits">0</span></p>
+            <div class="shop-grid">
+                <button class="upgrade-btn" data-upgrade="extendedMag">
+                    <strong>Extended Mag</strong><br>
+                    +5 Magazine Size<br>
+                    Credits: <span class="cost">25</span>
+                </button>
+                <button class="upgrade-btn" data-upgrade="highCaliber">
+                    <strong>High-Caliber Rounds</strong><br>
+                    25% More damage<br>
+                    Credits: <span class="cost">50</span>
+                </button>
+                <button class="upgrade-btn" data-upgrade="temporalField">
+                    <strong>Temporal Field</strong><br>
+                    Slows enemy (5s)<br>
+                    Credits: <span class="cost">80</span>
+                </button>
+                <button class="upgrade-btn" data-upgrade="siphonRounds">
+                    <strong>HP Siphon Rounds</strong><br>
+                    +5 HP per kill<br>
+                    Credits: <span class="cost">75</span>
+                </button>
+                <button class="upgrade-btn" data-upgrade="damageImmunity">
+                    <strong>Damage Immunity</strong><br>
+                    No damage taken (5s)<br>
+                    Credits: <span class="cost">70</span>
+                </button>
+                <button class="upgrade-btn" data-upgrade="explosive">
+                    <strong>Explosive</strong><br>
+                    Kills enemies within blast radius<br>
+                    Credits: <span class="cost">5</span>
+                </button>
+            </div>
+            <div class="shop-actions">
+                <button id="solvePuzzleBtn">Solve Puzzle</button>
+                <button id="buySelectedBtn">Upgrade</button>
+                <button id="nextLevelBtn">Start Next Level</button>
+            </div>
+        </div>
+
+        <!-- Puzzle modal overlay -->
+        <div id="puzzleModal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <button id="closePuzzleBtn" class="modal-close">✕</button>
+                <h3>Heart Game Puzzle</h3>
+                <img id="puzzleImageModal" src="" alt="Puzzle image">
+                <div class="modal-inputs">
+                    <input type="number" id="answerInputModal" placeholder="Your answer">
+                    <button id="submitBtnModal">Submit</button>
+                </div>
+                <div id="puzzleResult" class="modal-result"></div>
+            </div>
+        </div>
+
+
+
+        <div class="reload-bar" id="reloadBar" style="display: none;">
+            <div class="reload-fill" id="reloadFill"></div>
+        </div>
+    </div>
+
+
+
+
+
+    <script type="module" src="/js/Main.js"></script>
+    
+</body>
+</html>
