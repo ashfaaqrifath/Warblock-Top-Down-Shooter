@@ -128,7 +128,7 @@ body {
     margin-top: 15px;
 }
 
-#nextWaveBtn {
+#nextLevelBtn {
     background: #2a5a2a;
     border: 2px solid #4a8a4a;
     color: #fff;
@@ -140,7 +140,7 @@ body {
     flex: 1;
 }
 
-#nextWaveBtn:hover {
+#nextLevelBtn:hover {
     background: #3a6a3a;
 }
 
