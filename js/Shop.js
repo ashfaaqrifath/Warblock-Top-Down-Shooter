@@ -29,12 +29,6 @@ class Shop {
 
         upgrade.purchased++;
         const effect = this.getUpgradeEffect(upgradeType);
-        
-        this.eventEmitter.emit('upgrade-applied', {
-            upgradeType,
-            cost,
-            effect
-        });
 
         return { cost, effect };
     }
@@ -47,7 +41,7 @@ class Shop {
     getUpgradeEffect(upgradeType) {
         switch (upgradeType) {
             case 'extendedMag':
-                return { type: 'magazine', value: 5 };
+                return { type: 'magazine', value: 50 };
             case 'highCaliber':
                 return { type: 'damage', value: 1.25 };
             case 'damageImmunity':

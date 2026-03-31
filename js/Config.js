@@ -11,7 +11,6 @@ const GameConfig = {
         SPEED: 80,
         MAGAZINE_BASE: 30,
         FIRE_RATE: 0.2,
-        RELOAD_TIME: 2.0,
         DAMAGE_BASE: 25
     },
     ENEMY: {

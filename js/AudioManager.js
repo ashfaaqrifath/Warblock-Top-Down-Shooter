@@ -12,7 +12,6 @@ class AudioManager {
             shoot: this.createSound({ type: 'shoot', duration: 0.1 }),
             hit: this.createSound({ type: 'hit', duration: 0.15 }),
             death: this.createSound({ type: 'death', duration: 0.3 }),
-            reload: this.createSound({ type: 'reload', duration: 0.5 }),
             purchase: this.createSound({ type: 'purchase', duration: 0.4 })
         };
     }
@@ -34,8 +33,6 @@ class AudioManager {
                 sample = Math.random() * 0.2 * Math.exp(-t * 15) * Math.sin(t * 800);
             } else if (config.type === 'death') {
                 sample = Math.random() * 0.4 * Math.exp(-t * 5) * Math.sin(t * 200 + t * t * 1000);
-            } else if (config.type === 'reload') {
-                sample = 0.1 * Math.sin(t * 400) * Math.exp(-t * 3);
             } else if (config.type === 'purchase') {
                 sample = 0.2 * Math.sin(t * 600 + Math.sin(t * 10) * 2) * Math.exp(-t * 2);
             }

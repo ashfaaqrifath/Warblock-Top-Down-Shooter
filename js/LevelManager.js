@@ -3,6 +3,7 @@ import {GameConfig} from "./Config.js";
 class LevelManager {
     constructor() {
         this.currentLevel = 1;
+        this.levelName = "Unknown Realm";
         this.enemiesRemaining = 0;
         this.baseEnemies = GameConfig.LEVEL.BASE_ENEMIES;
         this.growthRate = GameConfig.LEVEL.GROWTH_RATE;
@@ -11,10 +12,33 @@ class LevelManager {
         this.levelActive = false;
     }
 
+    async generateLevelName(levelNumber) {
+        try {
+            const response = await fetch('https://random-word-api.herokuapp.com/all');
+            const words = await response.json();
+            
+            if (!words || words.length === 0) {
+                this.levelName = `Level ${levelNumber}`;
+                return;
+            }
+            
+            // Get two random words for a cooler name
+            const word1 = words[Math.floor(Math.random() * words.length)];
+            const word2 = words[Math.floor(Math.random() * words.length)];
+            
+            const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+            this.levelName = `${capitalize(word1)} ${capitalize(word2)}`;
+        } catch (error) {
+            console.error('Error generating level name:', error);
+            this.levelName = `Level ${levelNumber}`;
+        }
+    }
+
     startLevel() {
         this.levelActive = true;
         this.enemiesRemaining = Math.floor(this.baseEnemies * Math.pow(this.growthRate, this.currentLevel - 1));
         this.spawnTimer = 0;
+        this.generateLevelName(this.currentLevel);
     }
 
     update(deltaTime, onSpawn) {

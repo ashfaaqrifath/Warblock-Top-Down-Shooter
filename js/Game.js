@@ -72,8 +72,7 @@ export class Game {
             if (this.player.health <= 0) {
                 this.player.health = this.player.maxHealth;
             }
-            this.player.isReloading = false;
-            this.uiManager.hideReloadBar();
+            
             this.explosiveUsedThisLevel = false;
             this.gameState = 'playing';
             this.levelManager.startLevel();
@@ -139,13 +138,6 @@ export class Game {
 
             this.keys[e.key.toLowerCase()] = true;
 
-            if (e.key.toLowerCase() === 'r' && this.gameState === 'playing') {
-                this.player.reload();
-                if (this.player.isReloading) {
-                    this.uiManager.showReloadBar();
-                    this.audioManager.play('reload');
-                }
-            }
 
             if (e.key.toLowerCase() === 'i' && this.gameState === 'playing') {
                 if (this.shop.hasUpgrade('damageImmunity') && this.player.damageImmunityTimer <= 0) {
@@ -269,12 +261,7 @@ export class Game {
         this.particles.forEach(particle => particle.update(deltaTime));
         this.particles = this.particles.filter(particle => particle.active);
 
-        if (this.player.isReloading) {
-            const progress = (this.player.reloadProgress / this.player.reloadTime) * 100;
-            this.uiManager.updateReloadBar(progress);
-        } else {
-            this.uiManager.hideReloadBar();
-        }
+
 
         // Temporal field logic
         if (this.temporalFieldActive) {

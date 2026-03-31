@@ -7,7 +7,6 @@ class UIManager {
         this.eventEmitter = eventEmitter;
         this.hud = document.getElementById('hud');
         this.shop = document.getElementById('shop');
-        this.reloadBar = document.getElementById('reloadBar');
         this.currentPlayer = null;
         this.currentLevelManager = null;
         this.currentShop = null;
@@ -99,7 +98,7 @@ class UIManager {
     }
 
     updateHUD(player, levelManager, shop, credits) {
-        document.getElementById('levelDisplay').textContent = levelManager.currentLevel;
+        document.getElementById('levelDisplay').textContent = `${levelManager.currentLevel}: ${levelManager.levelName}`;
         document.getElementById('creditsDisplay').textContent = credits;
         document.getElementById('ammoDisplay').textContent = `${player.currentAmmo}/${player.magazine}`;
         document.getElementById('healthDisplay').textContent = player.health;
@@ -147,18 +146,6 @@ class UIManager {
 
     hideShop() {
         this.shop.style.display = 'none';
-    }
-
-    showReloadBar() {
-        this.reloadBar.style.display = 'block';
-    }
-
-    hideReloadBar() {
-        this.reloadBar.style.display = 'none';
-    }
-
-    updateReloadBar(progress) {
-        document.getElementById('reloadFill').style.width = progress + '%';
     }
 }
 

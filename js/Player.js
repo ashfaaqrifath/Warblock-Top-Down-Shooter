@@ -12,9 +12,6 @@ class Player {
         this.size = GameConfig.PLAYER.SIZE;
         this.magazine = GameConfig.PLAYER.MAGAZINE_BASE;
         this.currentAmmo = GameConfig.PLAYER.MAGAZINE_BASE / 2;
-        this.isReloading = false;
-        this.reloadTime = GameConfig.PLAYER.RELOAD_TIME;
-        this.reloadProgress = 0;
         this.fireRate = GameConfig.PLAYER.FIRE_RATE;
         this.lastShot = 0;
         this.damage = GameConfig.PLAYER.DAMAGE_BASE;
@@ -37,15 +34,6 @@ class Player {
         this.position.x = Math.max(this.size/2, Math.min(GameConfig.CANVAS.WIDTH - this.size/2, this.position.x));
         this.position.y = Math.max(this.size/2, Math.min(GameConfig.CANVAS.HEIGHT - this.size/2, this.position.y));
 
-        // Reload handling
-        if (this.isReloading) {
-            this.reloadProgress += deltaTime;
-            if (this.reloadProgress >= this.reloadTime) {
-                this.currentAmmo = this.magazine;
-                this.isReloading = false;
-                this.reloadProgress = 0;
-            }
-        }
 
         // Update fire rate cooldown
         this.lastShot += deltaTime;
@@ -63,7 +51,7 @@ class Player {
     }
 
     shoot(mousePos) {
-        if (this.isReloading || this.currentAmmo <= 0 || this.lastShot < this.fireRate) {
+        if (this.currentAmmo <= 0 || this.lastShot < this.fireRate) {
             return null;
         }
 
@@ -82,12 +70,6 @@ class Player {
         };
     }
 
-    reload() {
-        if (!this.isReloading && this.currentAmmo < this.magazine) {
-            this.isReloading = true;
-            this.reloadProgress = 0;
-        }
-    }
 
     takeDamage(damage) {
         if (this.damageImmunityTimer > 0) return;
