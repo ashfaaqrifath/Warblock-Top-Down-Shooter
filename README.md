@@ -2,9 +2,6 @@
 
 A browser-based top-down shooter game built with vanilla JavaScript and HTML5 Canvas. Features user authentication, a level-based progression system, an in-game upgrade shop, a puzzle mechanic to earn credits, and a global leaderboard — all powered by **Supabase** as the backend.
 
-> **Current Version:** v1.2.0
-
-🎮 **[Play Now](https://ashfaaqrifath.github.io/Warblock-Top-Down-Shooter/)**
 
 ---
 
@@ -114,9 +111,3 @@ To self-host, set up a Supabase project and update the Supabase URL and anon key
 | UI | HTML, CSS |
 | Auth & Database | Supabase |
 | Hosting | GitHub Pages |
-
----
-
-## 📄 License
-
-MIT — © Ashfaaq Rifath
