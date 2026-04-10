@@ -47,7 +47,7 @@ export function initPuzzle() {
                 return;
             }
             if (val === _puzzleModalSolution) {
-                resultEl.innerHTML = '<span class="success">✅ Correct!<br>10 credits + 10 HP gained</span>';
+                resultEl.innerHTML = '<span class="success">✅ Correct!<br>10 credits + 10 HP rewarded</span>';
                 // Grant rewards – requires game reference; we'll handle via event emitter in main
                 // For now, we can emit an event or dispatch a custom event.
                 window.dispatchEvent(new CustomEvent('puzzle-correct'));

@@ -6,7 +6,7 @@
     <title>Warblock - Top Down Shooter</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="shortcut icon" href="mylogo3.png">
+    <link rel="icon" type="image/png" href="gamelogo.png?v=1">
 </head>
 <body>
     <div id="leaderboard">
@@ -16,18 +16,36 @@
         </div>
     </div>
 
-    <div id="topRightControls">
-        <div id="userDisplay">
-            <i class="fas fa-user-circle"></i>&nbsp <span id="usernameDisplay">Loading...</span>
-            <br>
-            <h3>Highscore: <span id="highscoreDisplay">Loading...</span> levels</h3>
+    <div id="profileBox">
+        <div class="profile-header">
+            <i class="fas fa-user-circle"></i>
+            <div>
+                <span id="usernameDisplay">Loading...</span>
+                <div id="emailDisplay" style="font-size: 12px; font-weight: normal; color: #aaa; margin-top: 4px;"></div>
+            </div>
         </div>
-        <br>
-        <div id="authButtons">
-            
-            <button id="logoutBtn" class="top-btn">Logout</button>
+        <div class="profile-section">
+            <div class="profile-stat">
+                <span class="stat-label">Highscore</span>
+                <span class="stat-value" id="highscoreDisplay">0</span>
+                <span class="stat-unit">Levels</span>
+            </div>
         </div>
-        <br>
+        <div class="profile-actions">
+            <button id="logoutBtn" class="profile-btn profile-btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <div id="activeUpgradesBox">
+        <div class="upgrades-header">
+            <i class="fa-solid fa-circle-up"></i>
+            Active Upgrades
+        </div>
+        <div id="upgradesList" class="upgrades-list">
+            <!-- Active upgrades -->
+        </div>
     </div>
 
     <div id="gameContainer">
@@ -41,7 +59,7 @@
         </div>
 
         
-        <div id="upgradeIcons"></div>
+        
 
         <div id="shop">
             <h2>Upgrades</h2>

@@ -18,7 +18,7 @@ body {
 
 #gameContainer {
     position: relative;
-    border: 2px solid #333;
+    border: 2px solid #3a5a8a;
     border-radius: 10px;
 }
 
@@ -37,32 +37,7 @@ body {
     line-height: 1.4;
 }
 
-/* Upgrade icons – now positioned top right, stacked vertically */
-#upgradeIcons {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    background: rgba(10, 10, 10, 0.7);
-    padding: 6px;
-    border-radius: 6px;
-    border: 1px solid #333;
-    max-width: 140px;
-}
 
-#upgradeIcons > div {
-    background: #2a4a2a;
-    border: 1px solid #4a7a4a;
-    border-radius: 3px;
-    padding: 4px 8px;
-    font-size: 11px;
-    text-align: center;
-    color: #fff;
-    white-space: nowrap;
-}
 
 #shop {
     position: absolute;
@@ -160,97 +135,271 @@ body {
     background: #9a3a3a;
 }
 
-/* Top-right controls container */
-#topRightControls {
+
+#profileBox {
     position: fixed;
     top: 17px;
     right: 12px;
     z-index: 1000;
+    background: rgba(20,20,30,0.95);
+    border: 2px solid #3a5a8a;
+    padding: 15px;
+    border-radius: 10px;
+    width: 260px;
+    color: #fff;
+    font-family: inherit;
+    
+}
+
+.profile-header {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.profile-header i {
+    color: #0099ff;
+    font-size: 24px;
+}
+
+.profile-section {
+    margin-bottom: 12px;
+    padding: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+}
+
+.profile-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
     gap: 8px;
-    align-items: flex-end;
 }
 
-/* User display at top */
-#userDisplay {
-    font-weight: 700;
+.stat-label {
+    color: #999;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    flex: 1;
+}
+
+.stat-value {
+    color: #ffd966;
     font-size: 20px;
-    text-align: right;
-}
-
-#userDisplay h3{
     font-weight: 700;
-    font-size: 15px;
-    text-align: right;
-    padding-top: 10px;
+    min-width: 50px;
 }
 
-/* Auth buttons row */
-#authButtons {
+.stat-unit {
+    color: #666;
+    font-size: 12px;
+}
+
+.profile-actions {
     display: flex;
-    gap: 6px;
-    flex-direction: row;
+    gap: 8px;
+    flex-direction: column;
 }
 
-/* shared button style for top-right controls */
-.top-btn,
-#solvePuzzleMainBtn { /* not in use*/
+.profile-btn {
     background: #2a4a6a;
     border: 2px solid #4a7a9a;
     color: #fff;
-    padding: 8px 12px;
+    padding: 10px 14px;
     border-radius: 6px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.top-btn:hover,
-#solvePuzzleMainBtn:hover { /* not in use*/
+.profile-btn:hover {
     background: #3a5a8a;
+    border-color: #5a8aaa;
+    box-shadow: 0 0 12px rgba(58,90,138,0.4);
 }
 
-/* Login button - green */
-#loginBtn {
-    background: #2a5a2a;
-    border-color: #4a8a4a;
-}
-#loginBtn:hover {
-    background: #3a6a3a;
+.profile-btn:active {
+    background: #2a3a5a;
 }
 
-/* Logout button - red */
-#logoutBtn {
+.profile-btn-logout {
     background: #8a2a2a;
     border-color: #aa4a4a;
 }
-#logoutBtn:hover {
+
+.profile-btn-logout:hover {
     background: #9a3a3a;
+    border-color: #ba5a5a;
+    box-shadow: 0 0 12px rgba(138,42,42,0.4);
 }
 
-/* Leaderboard (top-left, outside canvas) */
+
+#activeUpgradesBox {
+    position: fixed;
+    top: 230px;
+    right: 12px;
+    z-index: 1000;
+    background: rgba(20,20,30,0.95);
+    border: 2px solid #3a5a8a;
+    padding: 15px;
+    border-radius: 10px;
+    width: 260px;
+    color: #fff;
+    font-family: inherit;
+}
+
+.upgrades-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.upgrades-header i {
+    color: #0099ff;
+    font-size: 18px;
+}
+
+.upgrades-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.upgrades-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.upgrades-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.upgrades-list::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+}
+
+.upgrades-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.upgrade-item {
+    padding: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.upgrade-icon {
+    font-size: 18px;
+    color: #43d843;
+    min-width: 20px;
+    text-align: center;
+}
+
+.upgrade-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.upgrade-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #43d843;
+}
+
+.upgrade-desc {
+    font-size: 11px;
+    color: #aaa;
+    line-height: 1.3;
+}
+
+.upgrades-empty {
+    text-align: center;
+    color: #666;
+    font-size: 12px;
+    padding: 10px;
+}
+
+
 #leaderboard {
     position: fixed;
     top: 17px;
     left: 12px;
     z-index: 1000;
     background: rgba(20,20,20,0.95);
-    border: 2px solid #333;
+    border: 2px solid #3a5a8a;
     padding: 8px 10px;
     border-radius: 8px;
-    width: 280px;
+    width: 275px;
     color: #fff;
     font-size: 14px;
 }
 
 #leaderboard h3 {
     margin: 0 0 6px 0;
-    font-size: 13px;
+    font-size: 14px;
     text-align: left;
 }
 
-#leaderboardList { display: flex; flex-direction: column; gap: 6px; }
+#leaderboardList { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 6px; 
+    max-height: 557px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+#leaderboardList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#leaderboardList::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#leaderboardList::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+}
+
+#leaderboardList::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.2);
+}
 .leader-item {
     display: flex;
     justify-content: space-between;

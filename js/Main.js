@@ -1,9 +1,19 @@
 import { GameFactory } from './GameFactory.js';
 import { initPuzzle, openPuzzleModal } from './HeartAPI.js';
-import { loadUsername, saveLevelsToDatabase, loadLeaderboardData, setupLogoutButton } from './Supabase.js';
+import { loadUsername, saveLevelsToDatabase, loadLeaderboardData, setupLogoutButton, checkAuthentication } from './Supabase.js';
 
 let game;
 let lastTime = 0;
+
+// Check authentication before starting game
+async function initializeGame() {
+    const isAuthenticated = await checkAuthentication()
+    if (!isAuthenticated) {
+        return // Will be redirected
+    }
+    
+    requestAnimationFrame(gameLoop);
+}
 
 function gameLoop(currentTime) {
     if (!game) {
@@ -19,8 +29,8 @@ function gameLoop(currentTime) {
     requestAnimationFrame(gameLoop);
 }
 
-// Start the game loop immediately (canvas exists)
-requestAnimationFrame(gameLoop);
+// Start authentication flow
+initializeGame();
 
 // Initialize UI and Supabase when DOM is ready
 window.addEventListener('DOMContentLoaded', async () => {

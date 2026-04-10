@@ -14,8 +14,13 @@ class EventEmitter {
     }
 
     emit(eventName, data) {
-        if (!this.events[eventName]) return;
-        this.events[eventName].forEach(callback => callback(data));
+        // Call internal listeners if they exist
+        if (this.events[eventName]) {
+            this.events[eventName].forEach(callback => callback(data));
+        }
+        
+        // Also dispatch as a window event so Main.js can listen
+        window.dispatchEvent(new CustomEvent(eventName, { detail: data }));
     }
 }
 

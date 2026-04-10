@@ -11,6 +11,14 @@ class UIManager {
         this.currentLevelManager = null;
         this.currentShop = null;
         this.currentCredits = 0;
+        this.upgradeDescriptions = {
+            extendedMag: { name: 'Extended Magazine', desc: '+10 Magazine Capacity' },
+            highCaliber: { name: 'High-Caliber Rounds', desc: '25% More Damage per shot' },
+            temporalField: { name: 'Temporal Field', desc: 'Slows enemies for 5 seconds' },
+            siphonRounds: { name: 'HP Siphon Rounds', desc: '+5 HP gained per enemy kill' },
+            damageImmunity: { name: 'Damage Immunity', desc: 'No damage taken for 5 seconds' },
+            explosive: { name: 'Explosive Rounds', desc: 'AoE blast kills nearby enemies' }
+        };
         this.setupShopListeners();
         this.setupEventListeners();
     }
@@ -103,16 +111,55 @@ class UIManager {
         document.getElementById('ammoDisplay').textContent = `${player.currentAmmo}/${player.magazine}`;
         document.getElementById('healthDisplay').textContent = player.health;
 
-        const upgradeIcons = document.getElementById('upgradeIcons');
-        upgradeIcons.innerHTML = '';
+        // Update active upgrades display
+        this.updateActiveUpgrades(shop);
+    }
+
+    updateActiveUpgrades(shop) {
+        const upgradesList = document.getElementById('upgradesList');
+        upgradesList.innerHTML = '';
+
+        let hasUpgrades = false;
         Object.keys(shop.upgrades).forEach(upgradeType => {
             if (shop.hasUpgrade(upgradeType)) {
+                hasUpgrades = true;
+                const upgradeInfo = this.upgradeDescriptions[upgradeType];
+                const upgradePurchased = shop.upgrades[upgradeType].purchased;
+                
+                const item = document.createElement('div');
+                item.className = 'upgrade-item';
+                
                 const icon = document.createElement('div');
-                icon.style.cssText = 'margin: 2px; padding: 2px 6px; background: #2a4a2a; border: 1px solid #4a7a4a; border-radius: 3px; font-size: 8px;';
-                icon.textContent = upgradeType.charAt(0).toUpperCase() + upgradeType.slice(1);
-                upgradeIcons.appendChild(icon);
+                icon.className = 'upgrade-icon';
+                icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                
+                const info = document.createElement('div');
+                info.className = 'upgrade-info';
+                
+                const name = document.createElement('div');
+                name.className = 'upgrade-name';
+                name.textContent = `${upgradeInfo.name} (x${upgradePurchased})`;
+                
+                const desc = document.createElement('div');
+                desc.className = 'upgrade-desc';
+                desc.textContent = upgradeInfo.desc;
+                
+                info.appendChild(name);
+                info.appendChild(desc);
+                item.appendChild(icon);
+                item.appendChild(info);
+                
+                upgradesList.appendChild(item);
             }
         });
+
+        // Show empty message if no upgrades yet
+        if (!hasUpgrades) {
+            const empty = document.createElement('div');
+            empty.className = 'upgrades-empty';
+            empty.textContent = 'No upgrades yet';
+            upgradesList.appendChild(empty);
+        }
     }
 
     updateShop(shop, credits) {

@@ -50,6 +50,7 @@ async function loadUsername(){
 
         if(data){
             document.getElementById("usernameDisplay").textContent = data.username
+            document.getElementById("emailDisplay").textContent = email
             document.getElementById("highscoreDisplay").textContent = data.levels
         }else{
             document.getElementById("usernameDisplay").textContent = "Username not found"
@@ -129,8 +130,29 @@ function setupLogoutButton() {
     if (logoutBtn) {
         logoutBtn.onclick = async () => {
             await supabase.auth.signOut()
+            // Clear all local storage to ensure complete session logout
+            localStorage.clear()
+            sessionStorage.clear()
             window.location.href = "index.html"
         }
+    }
+}
+
+async function checkAuthentication() {
+    try {
+        const { data: sessionData } = await supabase.auth.getSession()
+        
+        if (!sessionData.session) {
+            console.warn("redirecting to login");
+            window.location.href = "index.html"
+            return false
+        }
+        
+        return true
+    } catch (error) {
+        console.error("Error checking authentication:", error)
+        window.location.href = "index.html"
+        return false
     }
 }
 
@@ -138,5 +160,6 @@ export {
     loadUsername,
     saveLevelsToDatabase,
     loadLeaderboardData,
-    setupLogoutButton
+    setupLogoutButton,
+    checkAuthentication
 }
