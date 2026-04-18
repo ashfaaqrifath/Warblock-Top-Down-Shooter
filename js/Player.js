@@ -22,27 +22,27 @@ class Player {
     }
 
     update(deltaTime, mousePos) {
-        // Rotation towards mouse
+        
         const direction = mousePos.subtract(this.position);
         this.rotation = Math.atan2(direction.y, direction.x);
 
-        // Movement
+        
         this.position = this.position.add(this.velocity.multiply(deltaTime));
-        this.velocity = this.velocity.multiply(0.8); // Friction
+        this.velocity = this.velocity.multiply(0.8); // make things slide and slow down
 
-        // Bounds checking
+        
         this.position.x = Math.max(this.size/2, Math.min(GameConfig.CANVAS.WIDTH - this.size/2, this.position.x));
         this.position.y = Math.max(this.size/2, Math.min(GameConfig.CANVAS.HEIGHT - this.size/2, this.position.y));
 
 
-        // Update fire rate cooldown
+        
         this.lastShot += deltaTime;
 
-        // Update contact damage cooldown
+        
         this.lastContactDamageTime -= deltaTime;
-        // Update pulse timer for temporal visual effects
+        
         if (this.pulseTimer !== undefined) this.pulseTimer += deltaTime;
-        // Update damage immunity timer
+        
         if (this.damageImmunityTimer > 0) this.damageImmunityTimer -= deltaTime;
     }
 
@@ -60,8 +60,7 @@ class Player {
 
         const direction = mousePos.subtract(this.position).normalize();
         
-        // Return bullet data instead of creating Bullet instance
-        // Game will create the actual Bullet object
+        
         return {
             x: this.position.x,
             y: this.position.y,
@@ -82,7 +81,7 @@ class Player {
     }
 
     draw(ctx) {
-        // Draw health bar
+        // draw health bar
         const healthBarY = this.position.y - this.size - 8;
         ctx.fillStyle = GameConfig.COLORS.HEALTH_BAR_BG;
         ctx.fillRect(this.position.x - 15, healthBarY, 30, 4);
@@ -90,24 +89,25 @@ class Player {
         const healthWidth = (this.health / this.maxHealth) * 30;
         ctx.fillRect(this.position.x - 15, healthBarY, healthWidth, 4);
 
-        // Draw player (with temporal pulse when active)
+        
         ctx.save();
         ctx.translate(this.position.x, this.position.y);
         ctx.rotate(this.rotation);
 
+        // temporal effect - AI GENERATED
         if (this.isTemporalActive) {
-            const freq = 8; // pulse frequency
+            const freq = 8; 
             const t = this.pulseTimer || 0;
             const pulse = (Math.sin(t * freq) + 1) / 2; // 0..1
 
-            // glow using shadowBlur and varying alpha
+            
             ctx.shadowColor = GameConfig.COLORS.PLAYER_TEMPORAL;
             ctx.shadowBlur = 8 + pulse * 12;
             ctx.globalAlpha = 0.85 + pulse * 0.15;
             ctx.fillStyle = GameConfig.COLORS.PLAYER_TEMPORAL;
             ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
 
-            // reset shadow and alpha for direction indicator
+            
             ctx.shadowBlur = 0;
             ctx.globalAlpha = 1;
             ctx.fillStyle = '#6aaa6a';
@@ -116,24 +116,25 @@ class Player {
             ctx.fillStyle = GameConfig.COLORS.PLAYER;
             ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
 
-            // Draw direction indicator
+            
             ctx.fillStyle = '#6aaa6a';
             ctx.fillRect(this.size/4, -2, this.size/2, 4);
         }
 
+        // damage immunity effect - AI GENERATED
         if (this.damageImmunityTimer > 0) {
             const freq = 8; // pulse frequency
             const t = this.pulseTimer || 0;
             const pulse = (Math.sin(t * freq) + 1) / 2; // 0..1
 
-            // glow using shadowBlur and varying alpha
+            
             ctx.shadowColor = GameConfig.COLORS.PLAYER_TEMPORAL;
             ctx.shadowBlur = 8 + pulse * 12;
             ctx.globalAlpha = 0.85 + pulse * 0.15;
             ctx.fillStyle = GameConfig.COLORS.PLAYER_TEMPORAL;
             ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
 
-            // reset shadow and alpha for direction indicator
+            
             ctx.shadowBlur = 0;
             ctx.globalAlpha = 1;
             ctx.fillStyle = '#6aaa6a';
@@ -142,7 +143,7 @@ class Player {
             ctx.fillStyle = GameConfig.COLORS.PLAYER;
             ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
 
-            // Draw direction indicator
+            
             ctx.fillStyle = '#6aaa6a';
             ctx.fillRect(this.size/4, -2, this.size/2, 4);
         }

@@ -6,42 +6,42 @@ import { Shop } from './Shop.js';
 import { Player } from './Player.js';
 import { LevelManager } from './LevelManager.js';
 import { EventEmitter } from './EventEmitter.js';
+import { EntityFactory } from './EntityFactory.js';
 import { GameConfig } from './Config.js';
 
-/**
- * GameFactory - Handles dependency creation and injection
- * Centralizes the creation of all game components to reduce coupling
- */
+
 export class GameFactory {
     static createGame(onGameOver) {
-        // Create the event emitter first (shared by all components)
+        // message system
         const eventEmitter = new EventEmitter();
         
-        // Create service managers
+        // helper things
         const audioManager = new AudioManager();
         const uiManager = new UIManager(eventEmitter);
-        const collisionManager = new CollisionManager(audioManager, eventEmitter);
+        const collisionManager = new CollisionManager(audioManager);
+        const entityFactory = new EntityFactory();
         
-        // Create game entities
+        // make the player and level
         const player = new Player(GameConfig.PLAYER.SPAWN_X, GameConfig.PLAYER.SPAWN_Y);
         player.currentAmmo = player.magazine;
         
         const levelManager = new LevelManager();
         const shop = new Shop(eventEmitter);
         
-        // Create dependencies object
+        
         const dependencies = {
             eventEmitter,
             audioManager,
             uiManager,
             collisionManager,
+            entityFactory,
             player,
             levelManager,
             shop,
             onGameOver
         };
         
-        // Create and return the game instance
+        
         return new Game(dependencies);
     }
 }

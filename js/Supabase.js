@@ -1,6 +1,3 @@
-// ============================================================
-// LEADERBOARD
-// ============================================================
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
 const SUPABASE_URL = "https://rnkjnwgkbntinkhgrbpm.supabase.co"
@@ -71,7 +68,7 @@ async function saveLevelsToDatabase(levelsReached) {
 
         const email = sessionData.session.user.email
 
-        // Get the current user's record
+        // get their old score
         const { data: existingData, error: fetchError } = await supabase
             .from("leaderboard")
             .select("levels")
@@ -83,7 +80,7 @@ async function saveLevelsToDatabase(levelsReached) {
             return
         }
 
-        // Only update if the new levels count is higher than the current one
+        // only save if they did better this time
         const currentLevels = existingData?.levels || 0
         if (levelsReached > currentLevels) {
             const { error: updateError } = await supabase
@@ -94,11 +91,11 @@ async function saveLevelsToDatabase(levelsReached) {
             if (updateError) {
                 console.error("Error updating levels:", updateError)
             } else {
-                // Update the UI to show the new highscore
+                
                 document.getElementById("highscoreDisplay").textContent = levelsReached
             }
         } else {
-            console.log(`Less than highscore (${currentLevels})`)
+            console.log(`didnt beat their best of ${currentLevels}`)
         }
     } catch (error) {
         console.error("Error in saveLevelsToDatabase:", error)
@@ -130,7 +127,7 @@ function setupLogoutButton() {
     if (logoutBtn) {
         logoutBtn.onclick = async () => {
             await supabase.auth.signOut()
-            // Clear all local storage to ensure complete session logout
+            // throw away all the saved stuff
             localStorage.clear()
             sessionStorage.clear()
             window.location.href = "index.html"
@@ -143,7 +140,7 @@ async function checkAuthentication() {
         const { data: sessionData } = await supabase.auth.getSession()
         
         if (!sessionData.session) {
-            console.warn("redirecting to login");
+            console.warn("gotta go back to login");
             window.location.href = "index.html"
             return false
         }

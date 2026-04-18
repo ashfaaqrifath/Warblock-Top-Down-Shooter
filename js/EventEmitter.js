@@ -1,6 +1,4 @@
-// ===========================
-// EVENT EMITTER 
-// ===========================
+
 class EventEmitter {
     constructor() {
         this.events = {};
@@ -14,12 +12,12 @@ class EventEmitter {
     }
 
     emit(eventName, data) {
-        // Call internal listeners if they exist
+        // tell everyone listening to this message
         if (this.events[eventName]) {
             this.events[eventName].forEach(callback => callback(data));
         }
         
-        // Also dispatch as a window event so Main.js can listen
+        // also send it globally
         window.dispatchEvent(new CustomEvent(eventName, { detail: data }));
     }
 }

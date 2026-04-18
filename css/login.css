@@ -74,7 +74,7 @@ body {
   transform: scale(0.9) translateX(5px);
   pointer-events: none;
   transition: all .5s ease;
-  grid-area: 1/1/1/1; /* all cards occupy the same cell */
+  grid-area: 1/1/1/1;
 }
 
 .card.active {

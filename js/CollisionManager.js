@@ -1,13 +1,11 @@
-// ============================================================
-// COLLISION MANAGER - Handles all collision detection
-// ============================================================
+// crash stuff into each other
+
 import {GameConfig} from './Config.js';
 
 
 class CollisionManager {
-    constructor(audioManager, eventEmitter) {
+    constructor(audioManager) {
         this.audioManager = audioManager;
-        this.eventEmitter = eventEmitter;
     }
 
     checkBulletEnemyCollisions(bullets, enemies, bulletDamage, upgrades, onCollision) {
@@ -23,10 +21,10 @@ class CollisionManager {
                     
                     const result = enemy.takeDamage(bullet.damage, upgrades);
 
-                    // Create hit particles
+                    // effects when hit enemy
                     for (let i = 0; i < 5; i++) {
                         const angle = Math.random() * Math.PI * 2;
-                        const speed = 50 + Math.random() * 100;
+                        const speed = 50 + Math.random() * 500;
                         onCollision('particle', {
                             x: enemy.position.x,
                             y: enemy.position.y,
@@ -41,7 +39,7 @@ class CollisionManager {
                     this.audioManager.play('hit');
 
                     if (result.isDead) {
-                        // Death explosion
+
                         for (let i = 0; i < 15; i++) {
                             const angle = Math.random() * Math.PI * 2;
                             const speed = 100 + Math.random() * 200;
@@ -69,11 +67,11 @@ class CollisionManager {
             if (!enemy.active) return;
             const distance = enemy.position.distance(player.position);
             if (distance < (enemy.size + player.size) / 2) {
-                // Player takes damage once
+                
                 player.takeDamage(GameConfig.ENEMY.CONTACT_DAMAGE);
-                // Enemy dies
+                
                 enemy.active = false;
-                // Trigger effects (particles, sound)
+                
                 if (onCollision) {
                     onCollision('enemy-contact', { enemy, player });
                 }

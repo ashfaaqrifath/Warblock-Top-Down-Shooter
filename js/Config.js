@@ -1,6 +1,4 @@
-// ============================================================
-// CONFIGURATION - Centralized game constants
-// ============================================================
+
 const GameConfig = {
     CANVAS: { WIDTH: 800, HEIGHT: 600, GRID_SIZE: 40 },
     PLAYER: {
@@ -29,13 +27,13 @@ const GameConfig = {
         REWARD_BASE: 5,
         REWARD_GROWTH: 1
     },
-    UPGRADES: { // all the costs is 0 for demo purposes. must change later
-        extendedMag: { cost: 10, maxPurchases: 10, costGrowth: 1.5 },
-        highCaliber: { cost: 10, maxPurchases: 5, costGrowth: 1.5 },
-        temporalField: { cost: 10, maxPurchases: 1, costGrowth: 1.5 },
-        siphonRounds: { cost: 10, maxPurchases: 1, costGrowth: 1.5 },
-        damageImmunity: { cost: 10, maxPurchases: 1, costGrowth: 1.5 },
-        explosive: { cost: 10, maxPurchases: 1, costGrowth: 1.5 }
+    UPGRADES: {
+        extendedMag: { cost: 25, maxPurchases: 10, costGrowth: 1.5 },
+        highCaliber: { cost: 25, maxPurchases: 5, costGrowth: 1.5 },
+        temporalField: { cost: 75, maxPurchases: 1, costGrowth: 1.5 },
+        siphonRounds: { cost: 50, maxPurchases: 1, costGrowth: 1.5 },
+        damageImmunity: { cost: 75, maxPurchases: 1, costGrowth: 1.5 },
+        explosive: { cost: 80, maxPurchases: 1, costGrowth: 1.5 }
     },
     COLORS: {
         PLAYER: '#0099ff',
@@ -55,7 +53,7 @@ const GameConfig = {
         RADIUS: 180,
         DURATION: 5.0,
         COOLDOWN: 10.0,
-        SLOW_FACTOR: 0.8  // slowness
+        SLOW_FACTOR: 0.8 
     }
 };
 

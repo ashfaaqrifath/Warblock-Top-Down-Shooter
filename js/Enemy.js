@@ -13,10 +13,11 @@ export class Enemy {
         this.aggroTime = 0;
         this.slowEffect = 0;
         this.slowDuration = 0;
-        this.isInTemporalField = false;  // set by game each frame
+        this.isInTemporalField = false;
     }
     update(deltaTime, playerPos) {
         if (!this.active) return;
+        
         if (this.slowDuration > 0) {
             this.slowDuration -= deltaTime;
             if (this.slowDuration <= 0) this.slowEffect = 0;

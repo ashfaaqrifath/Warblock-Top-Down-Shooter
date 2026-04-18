@@ -5,11 +5,11 @@ import { loadUsername, saveLevelsToDatabase, loadLeaderboardData, setupLogoutBut
 let game;
 let lastTime = 0;
 
-// Check authentication before starting game
+// make sure the person logged in
 async function initializeGame() {
     const isAuthenticated = await checkAuthentication()
     if (!isAuthenticated) {
-        return // Will be redirected
+        return 
     }
     
     requestAnimationFrame(gameLoop);
@@ -17,7 +17,7 @@ async function initializeGame() {
 
 function gameLoop(currentTime) {
     if (!game) {
-        // Use GameFactory to create the game with injected dependencies
+        // make the game
         game = GameFactory.createGame((levelsReached) => {
             saveLevelsToDatabase(levelsReached);
         });
@@ -29,10 +29,10 @@ function gameLoop(currentTime) {
     requestAnimationFrame(gameLoop);
 }
 
-// Start authentication flow
+
 initializeGame();
 
-// Initialize UI and Supabase when DOM is ready
+
 window.addEventListener('DOMContentLoaded', async () => {
     initPuzzle();
     setupLogoutButton();
@@ -40,15 +40,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     await loadLeaderboardData();
 });
 
-// Listen for puzzle-correct event and reward the player
+
 window.addEventListener('puzzle-correct', () => {
     if (game) {
         game.addReward(10, 10);
     }
 });
 
-// Listen for puzzle-solve-requested event and open the puzzle modal
-// This decouples UIManager from HeartAPI
 window.addEventListener('puzzle-solve-requested', () => {
     openPuzzleModal();
 });

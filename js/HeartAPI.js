@@ -6,6 +6,7 @@ async function loadPuzzleModal() {
     try {
         resultEl.innerHTML = 'Loading...';
         imgEl.src = '';
+        // get the puzzle
         const response = await fetch('https://marcconrad.com/uob/heart/api.php?out=json&base64=yes');
         if (!response.ok) throw new Error('Network error ' + response.status);
         const data = await response.json();
@@ -23,9 +24,11 @@ export function openPuzzleModal() {
     const modal = document.getElementById('puzzleModal');
     const ans = document.getElementById('answerInputModal');
     const resultEl = document.getElementById('puzzleResult');
+    const checkBtn = document.getElementById('submitBtnModal');
     modal.style.display = 'flex';
     ans.value = '';
     resultEl.innerHTML = '';
+    checkBtn.disabled = false;
     loadPuzzleModal();
 }
 
@@ -33,7 +36,7 @@ export function closePuzzleModal() {
     document.getElementById('puzzleModal').style.display = 'none';
 }
 
-// Attach event listeners once (can be done in main)
+
 export function initPuzzle() {
     const checkBtn = document.getElementById('submitBtnModal');
     const closeBtn = document.getElementById('closePuzzleBtn');
@@ -48,8 +51,7 @@ export function initPuzzle() {
             }
             if (val === _puzzleModalSolution) {
                 resultEl.innerHTML = '<span class="success">✅ Correct!<br>10 credits + 10 HP rewarded</span>';
-                // Grant rewards – requires game reference; we'll handle via event emitter in main
-                // For now, we can emit an event or dispatch a custom event.
+                checkBtn.disabled = true;
                 window.dispatchEvent(new CustomEvent('puzzle-correct'));
             } else {
                 resultEl.innerHTML = '<span class="error">❌ Incorrect. Try again.</span>';

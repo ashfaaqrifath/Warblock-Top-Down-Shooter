@@ -22,7 +22,7 @@ class LevelManager {
                 return;
             }
             
-            // Get two random words for a cooler name
+            // Get two random words
             const word1 = words[Math.floor(Math.random() * words.length)];
             const word2 = words[Math.floor(Math.random() * words.length)];
             
@@ -46,7 +46,7 @@ class LevelManager {
 
         this.spawnTimer += deltaTime;
         if (this.spawnTimer >= this.spawnInterval && this.enemiesRemaining > 0) {
-            // Return spawn data instead of creating Enemy instances
+            
             const spawnData = this.getSpawnData();
             if (onSpawn) {
                 onSpawn(spawnData);
@@ -57,7 +57,7 @@ class LevelManager {
     }
 
     getSpawnData() {
-        // Spawn at random edge - return coordinates, not Enemy instance
+        
         let x, y;
         const side = Math.floor(Math.random() * 4);
         const offset = GameConfig.ENEMY.SPAWN_OFFSET;

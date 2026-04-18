@@ -13,11 +13,11 @@ class Bullet {
     update(deltaTime) {
         if (!this.active) return;
 
-        // Add trail point
+        // add trail
         this.trail.push({ x: this.position.x, y: this.position.y, life: 0.2 });
         if (this.trail.length > GameConfig.BULLET.TRAIL_SIZE) this.trail.shift();
 
-        // Update trail
+        //trail fade
         this.trail.forEach(point => {
             point.life -= deltaTime;
         });
@@ -25,7 +25,7 @@ class Bullet {
 
         this.position = this.position.add(this.velocity.multiply(deltaTime));
 
-        // Check bounds
+
         if (this.position.x < 0 || this.position.x > GameConfig.CANVAS.WIDTH || 
             this.position.y < 0 || this.position.y > GameConfig.CANVAS.HEIGHT) {
             this.active = false;
@@ -35,7 +35,7 @@ class Bullet {
     draw(ctx) {
         if (!this.active) return;
 
-        // Draw trail
+        
         this.trail.forEach((point, index) => {
             const alpha = point.life / 0.2;
             ctx.save();
@@ -46,7 +46,7 @@ class Bullet {
             ctx.restore();
         });
 
-        // Draw bullet
+        // draw bullet
         ctx.fillStyle = GameConfig.COLORS.BULLET;
         ctx.fillRect(this.position.x - 2, this.position.y - 2, GameConfig.BULLET.SIZE, GameConfig.BULLET.SIZE);
     }

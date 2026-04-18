@@ -1,6 +1,7 @@
-// ============================================================
-// AUDIO MANAGER - Handles all audio
-// ============================================================
+// AUDIO MANAGER
+// AI GENERATED - CHATGPT
+
+
 class AudioManager {
     constructor() {
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -11,8 +12,7 @@ class AudioManager {
         return {
             shoot: this.createSound({ type: 'shoot', duration: 0.1 }),
             hit: this.createSound({ type: 'hit', duration: 0.15 }),
-            death: this.createSound({ type: 'death', duration: 0.3 }),
-            purchase: this.createSound({ type: 'purchase', duration: 0.4 })
+            death: this.createSound({ type: 'death', duration: 0.3 })
         };
     }
 

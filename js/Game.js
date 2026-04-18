@@ -1,8 +1,5 @@
-import { Bullet } from './Bullet.js';
-import { Enemy } from './Enemy.js';
 import { GameConfig } from './Config.js';
 import { Vector2 } from './Vector.js';
-import { Particle } from './Particle.js';
 
 
 
@@ -11,17 +8,18 @@ export class Game {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         
-        // Inject dependencies instead of creating them
+        // get all the stuff we need from outside
         this.eventEmitter = dependencies.eventEmitter;
         this.audioManager = dependencies.audioManager;
         this.uiManager = dependencies.uiManager;
         this.collisionManager = dependencies.collisionManager;
+        this.entityFactory = dependencies.entityFactory;
         this.player = dependencies.player;
         this.levelManager = dependencies.levelManager;
         this.shop = dependencies.shop;
         this.onGameOver = dependencies.onGameOver;
         
-        // Initialize game state
+        // set up all the game stuff we need
         this.enemies = [];
         this.bullets = [];
         this.particles = [];
@@ -36,6 +34,10 @@ export class Game {
         this.explosiveUsedThisLevel = false;
         this.explosiveCooldown = 0;
 
+        this.levelCompleteTimer = 0;
+        this.levelCompleteDuration = 3;
+        this.bulletKills = 0;
+
         this.setupGameEventListeners();
         this.setupCanvasEventListeners();
         this.uiManager.updateHUD(this.player, this.levelManager, this.shop, this.credits);
@@ -47,12 +49,12 @@ export class Game {
             const result = this.shop.purchaseUpgrade(data.upgradeType, this.credits);
             if (result) {
                 this.credits -= result.cost;
-                // Emit event for upgrade applied instead of directly calling applyUpgradeEffect
+                
                 this.eventEmitter.emit('upgrade-applied', {
                     effect: result.effect,
                     cost: result.cost
                 });
-                this.audioManager.play('purchase');
+                
                 this.eventEmitter.emit('shop-updated', {
                     player: this.player,
                     levelManager: this.levelManager,
@@ -62,7 +64,7 @@ export class Game {
             }
         });
 
-        // Handle upgrade effects from the emitted event
+        
         this.eventEmitter.on('upgrade-applied', (data) => {
             this.applyUpgradeEffect(data.effect);
         });
@@ -74,6 +76,7 @@ export class Game {
             }
             
             this.explosiveUsedThisLevel = false;
+            this.bulletKills = 0;
             this.gameState = 'playing';
             this.levelManager.startLevel();
         });
@@ -109,8 +112,8 @@ export class Game {
             if (e.button === 0 && this.gameState === 'playing') {
                 const bulletData = this.player.shoot(this.mousePos);
                 if (bulletData) {
-                    // Create Bullet instance from the bullet data returned by Player
-                    const bullet = new Bullet(bulletData.x, bulletData.y, bulletData.direction, bulletData.damage);
+                    
+                    const bullet = this.entityFactory.createBullet(bulletData.x, bulletData.y, bulletData.direction, bulletData.damage);
                     this.bullets.push(bullet);
                     this.createMuzzleFlash(3);
                     this.audioManager.play('shoot');
@@ -188,7 +191,7 @@ export class Game {
             const g = 100 + Math.floor(Math.random() * 155);
             const b = 0;
             const color = `rgb(${r}, ${g}, ${b})`;
-            this.particles.push(new Particle(
+            this.particles.push(this.entityFactory.createParticle(
                 centerX, centerY,
                 Math.cos(angle) * speed,
                 Math.sin(angle) * speed,
@@ -199,7 +202,7 @@ export class Game {
         for (let i = 0; i < 20; i++) {
             const angle = (i / 20) * Math.PI * 2;
             const speed = 150;
-            this.particles.push(new Particle(
+            this.particles.push(this.entityFactory.createParticle(
                 centerX, centerY,
                 Math.cos(angle) * speed,
                 Math.sin(angle) * speed,
@@ -214,7 +217,7 @@ export class Game {
         for (let i = 0; i < 8; i++) {
             const angle = this.player.rotation + (Math.random() - 0.5) * 0.5;
             const speed = 100 + Math.random() * 150;
-            this.particles.push(new Particle(
+            this.particles.push(this.entityFactory.createParticle(
                 this.player.position.x + Math.cos(this.player.rotation) * 15,
                 this.player.position.y + Math.sin(this.player.rotation) * 15,
                 Math.cos(angle) * speed,
@@ -227,6 +230,16 @@ export class Game {
     }
 
     update(deltaTime) {
+        // Handle level completed transition to shop
+        if (this.gameState === 'levelCompleted') {
+            this.levelCompleteTimer += deltaTime;
+            if (this.levelCompleteTimer >= this.levelCompleteDuration) {
+                this.gameState = 'shop';
+                this.uiManager.showShop(this.shop, this.credits);
+            }
+            return;
+        }
+
         if (this.gameState !== 'playing') return;
 
         const moveDirection = new Vector2(0, 0);
@@ -245,10 +258,10 @@ export class Game {
 
         this.player.update(deltaTime, this.mousePos);
         
-        // LevelManager now calls our callback with spawn data
+        
         this.levelManager.update(deltaTime, (spawnData) => {
-            // Game creates the Enemy instance
-            const enemy = new Enemy(spawnData.x, spawnData.y);
+            
+            const enemy = this.entityFactory.createEnemy(spawnData.x, spawnData.y);
             this.enemies.push(enemy);
         });
 
@@ -263,7 +276,7 @@ export class Game {
 
 
 
-        // Temporal field logic
+        // Temporal field logic - AI GENERATED
         if (this.temporalFieldActive) {
             this.temporalFieldTimer -= deltaTime;
             if (this.temporalFieldTimer <= 0) this.temporalFieldActive = false;
@@ -299,9 +312,18 @@ export class Game {
             (type, data) => this.handleCollisionEvent(type, data)
         );
 
-        if (this.levelManager.isLevelComplete() && this.enemies.length === 0) {
+        if (this.levelManager.isLevelComplete() && this.enemies.length === 0 && this.gameState === 'playing') {
             this.levelManager.completeLevel();
             this.startShop();
+        }
+
+        // Handle level completed transition to shop
+        if (this.gameState === 'levelCompleted') {
+            this.levelCompleteTimer += deltaTime;
+            if (this.levelCompleteTimer >= this.levelCompleteDuration) {
+                this.gameState = 'shop';
+                this.uiManager.showShop(this.shop, this.credits);
+            }
         }
 
         if (this.player.health <= 0 && this.gameState !== 'gameOver') {
@@ -323,10 +345,11 @@ export class Game {
 
     handleCollisionEvent(type, data) {
         if (type === 'particle') {
-            this.particles.push(new Particle(
+            this.particles.push(this.entityFactory.createParticle(
                 data.x, data.y, data.vx, data.vy, data.color, data.life, data.size
             ));
         } else if (type === 'enemy-death') {
+            this.bulletKills++;
             this.credits += this.levelManager.getLevelReward();
             if (data.shouldHeal) this.player.heal(5);
         } else if (type === 'enemy-contact') {
@@ -334,7 +357,7 @@ export class Game {
             for (let i = 0; i < 15; i++) {
                 const angle = Math.random() * Math.PI * 2;
                 const speed = 100 + Math.random() * 200;
-                this.particles.push(new Particle(
+                this.particles.push(this.entityFactory.createParticle(
                     enemy.position.x, enemy.position.y,
                     Math.cos(angle) * speed,
                     Math.sin(angle) * speed,
@@ -409,18 +432,36 @@ export class Game {
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             this.ctx.fillStyle = '#fff';
-            this.ctx.font = '48px Chakra Petch';
+            this.ctx.font = 'bold 48px Chakra Petch';
             this.ctx.textAlign = 'center';
             this.ctx.fillText('PAUSED', this.canvas.width / 2, this.canvas.height / 2 - 10);
             this.ctx.font = '18px Chakra Petch';
             this.ctx.fillText('Press SPACE to resume', this.canvas.width / 2, this.canvas.height / 2 + 30);
         }
 
+        if (this.gameState === 'levelCompleted') {
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.fillStyle = '#00ff84d8';
+            this.ctx.font = 'bold 48px Chakra Petch';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('LEVEL COMPLETED', this.canvas.width / 2, this.canvas.height / 2 - 50);
+            this.ctx.fillStyle = '#ffd966';
+            this.ctx.font = '24px Chakra Petch';
+            this.ctx.fillText(this.levelManager.levelName, this.canvas.width / 2, this.canvas.height / 2 + 20);
+            this.ctx.fillStyle = '#fff';
+            this.ctx.font = '28px Chakra Petch';
+            this.ctx.fillText(`Level ${this.levelManager.currentLevel - 1}`, this.canvas.width / 2, this.canvas.height / 2 + 70);
+            this.ctx.fillStyle = '#fff';
+            this.ctx.font = '15px Chakra Petch';
+            this.ctx.fillText(`Enemies Killed: ${this.bulletKills}`, this.canvas.width / 2, this.canvas.height / 2 + 110);
+        }
+
         if (this.gameState === 'gameOver') {
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             this.ctx.fillStyle = '#fff';
-            this.ctx.font = '48px Chakra Petch';
+            this.ctx.font = 'bold 48px Chakra Petch';
             this.ctx.textAlign = 'center';
             this.ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2);
             this.ctx.font = '24px Chakra Petch';
@@ -442,8 +483,8 @@ export class Game {
     }
 
     startShop() {
-        this.gameState = 'shop';
-        this.uiManager.showShop(this.shop, this.credits);
+        this.gameState = 'levelCompleted';
+        this.levelCompleteTimer = 0;
     }
 
     startNextLevel() {
@@ -451,13 +492,15 @@ export class Game {
         this.levelManager.startLevel();
     }
 
-    // Public method to add rewards (used by puzzle event)
+    // method to add rewards (used by puzzle)
     addReward(creditsAmount, healthAmount) {
         this.credits += creditsAmount;
         if (this.player) {
             this.player.heal(healthAmount);
         }
-        this.eventEmitter.emit('hud-updated', {
+        
+
+        this.eventEmitter.emit('shop-updated', {
             player: this.player,
             levelManager: this.levelManager,
             shop: this.shop,

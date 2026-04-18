@@ -1,6 +1,3 @@
-// ============================================================
-// UI MANAGER - Handles all DOM updates
-// ============================================================
 
 class UIManager {
     constructor(eventEmitter) {
@@ -14,26 +11,26 @@ class UIManager {
         this.upgradeDescriptions = {
             extendedMag: { name: 'Extended Magazine', desc: '+10 Magazine Capacity' },
             highCaliber: { name: 'High-Caliber Rounds', desc: '25% More Damage per shot' },
-            temporalField: { name: 'Temporal Field', desc: 'Slows enemies for 5 seconds' },
+            temporalField: { name: 'Temporal Field', desc: 'Slows enemies for 5 seconds - Press (T)' },
             siphonRounds: { name: 'HP Siphon Rounds', desc: '+5 HP gained per enemy kill' },
-            damageImmunity: { name: 'Damage Immunity', desc: 'No damage taken for 5 seconds' },
-            explosive: { name: 'Explosive Rounds', desc: 'AoE blast kills nearby enemies' }
+            damageImmunity: { name: 'Damage Immunity', desc: 'No damage taken for 5 seconds - Press (I)' },
+            explosive: { name: 'Explosive', desc: 'Explosion kills nearby enemies - Press (E)' }
         };
         this.setupShopListeners();
         this.setupEventListeners();
     }
 
     setupShopListeners() {
-        // Clone and replace upgrade buttons to remove old listeners from previous game instances
+        
         document.querySelectorAll('.upgrade-btn').forEach(btn => {
             const newBtn = btn.cloneNode(true);
             btn.parentNode.replaceChild(newBtn, btn);
         });
 
-        // Toggle selection on click. Selection is visual; purchases occur when player confirms via upgrade.
+        
         document.querySelectorAll('.upgrade-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                // ignore clicks on disabled buttons
+                
                 if (btn.disabled) return;
                 const upgradeType = btn.dataset.upgrade;
                 if (btn.classList.contains('selected')) {
@@ -46,7 +43,7 @@ class UIManager {
             });
         });
 
-        // Buy all currently selected upgrades (clone button to remove old listeners)
+        // buy upgrade
         const buyBtn = document.getElementById('buySelectedBtn');
         if (buyBtn) {
             const newBuyBtn = buyBtn.cloneNode(true);
@@ -73,14 +70,14 @@ class UIManager {
             });
         }
 
-        // Solve Puzzle button emits event instead of calling HeartAPI directly
+        
         const solvePuzzleBtn = document.getElementById('solvePuzzleBtn');
         if (solvePuzzleBtn) {
             const newSolvePuzzleBtn = solvePuzzleBtn.cloneNode(true);
             solvePuzzleBtn.parentNode.replaceChild(newSolvePuzzleBtn, solvePuzzleBtn);
             
             newSolvePuzzleBtn.addEventListener('click', () => {
-                // Emit event - Main.js will handle opening the modal
+                // open the puzzle
                 this.eventEmitter.emit('puzzle-solve-requested', {});
             });
         }
@@ -111,7 +108,7 @@ class UIManager {
         document.getElementById('ammoDisplay').textContent = `${player.currentAmmo}/${player.magazine}`;
         document.getElementById('healthDisplay').textContent = player.health;
 
-        // Update active upgrades display
+        // show upgrades the player got
         this.updateActiveUpgrades(shop);
     }
 
@@ -153,7 +150,7 @@ class UIManager {
             }
         });
 
-        // Show empty message if no upgrades yet
+        
         if (!hasUpgrades) {
             const empty = document.createElement('div');
             empty.className = 'upgrades-empty';
